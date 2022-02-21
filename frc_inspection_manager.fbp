@@ -204,7 +204,7 @@
                         <object class="notebookpage" expanded="0">
                             <property name="bitmap"></property>
                             <property name="label">Teams</property>
-                            <property name="select">0</property>
+                            <property name="select">1</property>
                             <object class="wxPanel" expanded="0">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
@@ -291,7 +291,7 @@
                                             <property name="col_label_size"></property>
                                             <property name="col_label_values"></property>
                                             <property name="col_label_vert_alignment">wxALIGN_CENTER</property>
-                                            <property name="cols">5</property>
+                                            <property name="cols">2</property>
                                             <property name="column_sizes"></property>
                                             <property name="context_help"></property>
                                             <property name="context_menu">1</property>
@@ -303,7 +303,7 @@
                                             <property name="drag_col_size">1</property>
                                             <property name="drag_grid_size">0</property>
                                             <property name="drag_row_size">1</property>
-                                            <property name="editing">1</property>
+                                            <property name="editing">0</property>
                                             <property name="enabled">1</property>
                                             <property name="fg"></property>
                                             <property name="floatable">1</property>
@@ -333,12 +333,12 @@
                                             <property name="pin_button">1</property>
                                             <property name="pos"></property>
                                             <property name="resize">Resizable</property>
-                                            <property name="row_label_horiz_alignment">wxALIGN_CENTER</property>
-                                            <property name="row_label_size"></property>
+                                            <property name="row_label_horiz_alignment">wxALIGN_RIGHT</property>
+                                            <property name="row_label_size">wxGRID_AUTOSIZE</property>
                                             <property name="row_label_values"></property>
                                             <property name="row_label_vert_alignment">wxALIGN_CENTER</property>
                                             <property name="row_sizes"></property>
-                                            <property name="rows">5</property>
+                                            <property name="rows">1</property>
                                             <property name="show">1</property>
                                             <property name="size"></property>
                                             <property name="subclass">; ; forward_declare</property>
@@ -442,7 +442,7 @@
                                             <property name="col_label_size"></property>
                                             <property name="col_label_values"></property>
                                             <property name="col_label_vert_alignment">wxALIGN_CENTER</property>
-                                            <property name="cols">5</property>
+                                            <property name="cols">2</property>
                                             <property name="column_sizes"></property>
                                             <property name="context_help"></property>
                                             <property name="context_menu">1</property>
@@ -460,7 +460,7 @@
                                             <property name="floatable">1</property>
                                             <property name="font"></property>
                                             <property name="grid_line_color"></property>
-                                            <property name="grid_lines">0</property>
+                                            <property name="grid_lines">1</property>
                                             <property name="gripper">0</property>
                                             <property name="hidden">0</property>
                                             <property name="id">wxID_ANY</property>
@@ -484,12 +484,12 @@
                                             <property name="pin_button">1</property>
                                             <property name="pos"></property>
                                             <property name="resize">Resizable</property>
-                                            <property name="row_label_horiz_alignment">wxALIGN_CENTER</property>
-                                            <property name="row_label_size"></property>
+                                            <property name="row_label_horiz_alignment">wxALIGN_RIGHT</property>
+                                            <property name="row_label_size">wxGRID_AUTOSIZE</property>
                                             <property name="row_label_values"></property>
                                             <property name="row_label_vert_alignment">wxALIGN_CENTER</property>
                                             <property name="row_sizes"></property>
-                                            <property name="rows">5</property>
+                                            <property name="rows">1</property>
                                             <property name="show">1</property>
                                             <property name="size"></property>
                                             <property name="subclass">; ; forward_declare</property>

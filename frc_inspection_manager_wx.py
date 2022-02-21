@@ -48,8 +48,8 @@ class MainFrame ( wx.Frame ):
 		self.team_grid = wx.grid.Grid( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
-		self.team_grid.CreateGrid( 5, 5 )
-		self.team_grid.EnableEditing( True )
+		self.team_grid.CreateGrid( 1, 2 )
+		self.team_grid.EnableEditing( False )
 		self.team_grid.EnableGridLines( True )
 		self.team_grid.EnableDragGridSize( False )
 		self.team_grid.SetMargins( 0, 0 )
@@ -61,7 +61,8 @@ class MainFrame ( wx.Frame ):
 
 		# Rows
 		self.team_grid.EnableDragRowSize( True )
-		self.team_grid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
+		self.team_grid.SetRowLabelSize( wx.grid.GRID_AUTOSIZE )
+		self.team_grid.SetRowLabelAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTER )
 
 		# Label Appearance
 
@@ -73,16 +74,16 @@ class MainFrame ( wx.Frame ):
 		self.m_panel1.SetSizer( bSizer1 )
 		self.m_panel1.Layout()
 		bSizer1.Fit( self.m_panel1 )
-		self.m_notebook1.AddPage( self.m_panel1, u"Teams", False )
+		self.m_notebook1.AddPage( self.m_panel1, u"Teams", True )
 		self.m_panel2 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer2 = wx.BoxSizer( wx.VERTICAL )
 
 		self.inspector_grid = wx.grid.Grid( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
-		self.inspector_grid.CreateGrid( 5, 5 )
+		self.inspector_grid.CreateGrid( 1, 2 )
 		self.inspector_grid.EnableEditing( False )
-		self.inspector_grid.EnableGridLines( False )
+		self.inspector_grid.EnableGridLines( True )
 		self.inspector_grid.EnableDragGridSize( False )
 		self.inspector_grid.SetMargins( 0, 0 )
 
@@ -93,7 +94,8 @@ class MainFrame ( wx.Frame ):
 
 		# Rows
 		self.inspector_grid.EnableDragRowSize( True )
-		self.inspector_grid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
+		self.inspector_grid.SetRowLabelSize( wx.grid.GRID_AUTOSIZE )
+		self.inspector_grid.SetRowLabelAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTER )
 
 		# Label Appearance
 
