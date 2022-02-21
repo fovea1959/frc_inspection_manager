@@ -20,7 +20,7 @@ class Weighin:
         self.weighin_reason: WeighinReason = None
 
 
-TeamStatus = enum.Enum('InspectorStatus', 'Absent Present Weighed Partial Inspected')
+TeamStatus = enum.Enum('TeamStatus', 'Absent Present Weighed Partial Inspected')
 
 
 class Team:
@@ -50,7 +50,7 @@ class Database:
 
 
 # this is global
-database = None
+database: Database = None
 
 
 class MainFrame(frc_inspection_manager_wx.MainFrame):
@@ -79,10 +79,10 @@ class Status(frc_inspection_manager_wx.Status):
         super().__init__(parent)
 
         s = wx.GridSizer(8, 8, 2, 2)
-        for i in range(0, 40):
+        for t in database.teams:
             p = frc_inspection_manager_wx.TeamStatus(self)
-            p.team_number.SetLabel(str(i))
-            p.team_status.SetLabel('unknown')
+            p.team_number.SetLabel(str(t.team_number))
+            p.team_status.SetLabel(str(t.team_status))
             s.Add(p, 1, wx.EXPAND | wx.ALL, 2)
         s.SetSizeHints(self)
         self.SetSizer(s, deleteOld=True)
@@ -93,7 +93,6 @@ class Status(frc_inspection_manager_wx.Status):
             event.Veto()
         else:
             event.Skip()
-
 
 
 if __name__ == '__main__':
