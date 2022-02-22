@@ -348,7 +348,7 @@
                                             <property name="window_name"></property>
                                             <property name="window_style"></property>
                                             <event name="OnGridCellRightClick">on_team_right_click</event>
-                                            <event name="OnGridLabelRightClick">on_team_label_right_click</event>
+                                            <event name="OnGridLabelRightClick">on_team_right_click</event>
                                         </object>
                                     </object>
                                 </object>
@@ -359,15 +359,33 @@
                                     <object class="wxMenuItem" expanded="1">
                                         <property name="bitmap"></property>
                                         <property name="checked">0</property>
-                                        <property name="enabled">1</property>
+                                        <property name="enabled">0</property>
                                         <property name="help"></property>
                                         <property name="id">wxID_ANY</property>
                                         <property name="kind">wxITEM_NORMAL</property>
-                                        <property name="label">Weighin</property>
-                                        <property name="name">m_menuItem5</property>
+                                        <property name="label">team #</property>
+                                        <property name="name">m_t_team</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>
+                                    </object>
+                                    <object class="separator" expanded="1">
+                                        <property name="name">m_separator1</property>
+                                        <property name="permission">none</property>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_T_WEIGHIN</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">&amp;Weighin</property>
+                                        <property name="name">m_t_weighin</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_t_context</event>
                                     </object>
                                 </object>
                             </object>
@@ -504,7 +522,7 @@
                                             <property name="pin_button">1</property>
                                             <property name="pos"></property>
                                             <property name="resize">Resizable</property>
-                                            <property name="row_label_horiz_alignment">wxALIGN_RIGHT</property>
+                                            <property name="row_label_horiz_alignment">wxALIGN_LEFT</property>
                                             <property name="row_label_size">wxGRID_AUTOSIZE</property>
                                             <property name="row_label_values"></property>
                                             <property name="row_label_vert_alignment">wxALIGN_CENTER</property>
@@ -530,15 +548,103 @@
                                     <object class="wxMenuItem" expanded="1">
                                         <property name="bitmap"></property>
                                         <property name="checked">0</property>
-                                        <property name="enabled">1</property>
+                                        <property name="enabled">0</property>
                                         <property name="help"></property>
                                         <property name="id">wxID_ANY</property>
                                         <property name="kind">wxITEM_NORMAL</property>
-                                        <property name="label">Go on break</property>
-                                        <property name="name">m_menuItem6</property>
+                                        <property name="label">Inspector name</property>
+                                        <property name="name">m_i_inspector</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>
+                                    </object>
+                                    <object class="separator" expanded="1">
+                                        <property name="name">m_separator3</property>
+                                        <property name="permission">none</property>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_PIT</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Send to &amp;pit for inspection</property>
+                                        <property name="name">m_i_pit</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_PIT_RETURN</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Pit &amp;return</property>
+                                        <property name="name">m_i_pit_return</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_AVAILABLE</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">&amp;Available</property>
+                                        <property name="name">m_i_available</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_FIELD</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Going to &amp;field</property>
+                                        <property name="name">m_i_field</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_BREAK</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Go on &amp;break</property>
+                                        <property name="name">m_i_break</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_NOT_WORKING</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">&amp;Not working</property>
+                                        <property name="name">m_i_not_working</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
                                     </object>
                                 </object>
                             </object>
@@ -553,7 +659,7 @@
             <property name="bg">wxSYS_COLOUR_ACTIVEBORDER</property>
             <property name="center"></property>
             <property name="context_help"></property>
-            <property name="context_menu">1</property>
+            <property name="context_menu">0</property>
             <property name="enabled">1</property>
             <property name="event_handler">impl_virtual</property>
             <property name="extra_style"></property>
@@ -563,12 +669,12 @@
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
             <property name="minimum_size"></property>
-            <property name="name">Status</property>
+            <property name="name">TeamStatusFrame</property>
             <property name="pos"></property>
             <property name="size">500,300</property>
             <property name="style">wxCAPTION|wxMAXIMIZE_BOX|wxMINIMIZE_BOX|wxRESIZE_BORDER|wxSYSTEM_MENU</property>
             <property name="subclass">; ; forward_declare</property>
-            <property name="title">Status</property>
+            <property name="title">FRC Inspection Manager Big Board</property>
             <property name="tooltip"></property>
             <property name="two_step_creation">0</property>
             <property name="window_extra_style"></property>
@@ -591,7 +697,7 @@
             <property name="id">wxID_ANY</property>
             <property name="maximum_size"></property>
             <property name="minimum_size"></property>
-            <property name="name">TeamStatus</property>
+            <property name="name">TeamStatusPanel</property>
             <property name="pos"></property>
             <property name="size">240,83</property>
             <property name="subclass">; ; forward_declare</property>

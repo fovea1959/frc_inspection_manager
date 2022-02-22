@@ -11,6 +11,14 @@ import wx
 import wx.xrc
 import wx.grid
 
+ID_T_WEIGHIN = 1000
+ID_I_PIT = 1001
+ID_I_PIT_RETURN = 1002
+ID_I_AVAILABLE = 1003
+ID_I_FIELD = 1004
+ID_I_BREAK = 1005
+ID_I_NOT_WORKING = 1006
+
 ###########################################################################
 ## Class MainFrame
 ###########################################################################
@@ -74,8 +82,14 @@ class MainFrame ( wx.Frame ):
 		self.team_panel.Layout()
 		bSizer1.Fit( self.team_panel )
 		self.team_popup_menu = wx.Menu()
-		self.m_menuItem5 = wx.MenuItem( self.team_popup_menu, wx.ID_ANY, u"Weighin", wx.EmptyString, wx.ITEM_NORMAL )
-		self.team_popup_menu.Append( self.m_menuItem5 )
+		self.m_t_team = wx.MenuItem( self.team_popup_menu, wx.ID_ANY, u"team #", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_team )
+		self.m_t_team.Enable( False )
+
+		self.team_popup_menu.AppendSeparator()
+
+		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weighin", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_weighin )
 
 		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
 
@@ -100,7 +114,7 @@ class MainFrame ( wx.Frame ):
 		# Rows
 		self.inspector_grid.EnableDragRowSize( True )
 		self.inspector_grid.SetRowLabelSize( wx.grid.GRID_AUTOSIZE )
-		self.inspector_grid.SetRowLabelAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTER )
+		self.inspector_grid.SetRowLabelAlignment( wx.ALIGN_LEFT, wx.ALIGN_CENTER )
 
 		# Label Appearance
 
@@ -113,8 +127,29 @@ class MainFrame ( wx.Frame ):
 		self.inspector_panel.Layout()
 		bSizer2.Fit( self.inspector_panel )
 		self.inspector_popup_menu = wx.Menu()
-		self.m_menuItem6 = wx.MenuItem( self.inspector_popup_menu, wx.ID_ANY, u"Go on break", wx.EmptyString, wx.ITEM_NORMAL )
-		self.inspector_popup_menu.Append( self.m_menuItem6 )
+		self.m_i_inspector = wx.MenuItem( self.inspector_popup_menu, wx.ID_ANY, u"Inspector name", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_inspector )
+		self.m_i_inspector.Enable( False )
+
+		self.inspector_popup_menu.AppendSeparator()
+
+		self.m_i_pit = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT, u"Send to &pit for inspection", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_pit )
+
+		self.m_i_pit_return = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT_RETURN, u"Pit &return", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_pit_return )
+
+		self.m_i_available = wx.MenuItem( self.inspector_popup_menu, ID_I_AVAILABLE, u"&Available", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_available )
+
+		self.m_i_field = wx.MenuItem( self.inspector_popup_menu, ID_I_FIELD, u"Going to &field", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_field )
+
+		self.m_i_break = wx.MenuItem( self.inspector_popup_menu, ID_I_BREAK, u"Go on &break", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_break )
+
+		self.m_i_not_working = wx.MenuItem( self.inspector_popup_menu, ID_I_NOT_WORKING, u"&Not working", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_not_working )
 
 		self.inspector_panel.Bind( wx.EVT_RIGHT_DOWN, self.inspector_panelOnContextMenu )
 
@@ -131,9 +166,16 @@ class MainFrame ( wx.Frame ):
 		# Connect Events
 		self.Bind( wx.EVT_CLOSE, self.my_on_close )
 		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
-		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_label_right_click )
+		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_inspector_right_click )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_inspector_right_click )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit_return.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_available.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_field.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_break.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_not_working.GetId() )
 
 	def __del__( self ):
 		pass
@@ -146,11 +188,20 @@ class MainFrame ( wx.Frame ):
 	def on_team_right_click( self, event ):
 		pass
 
-	def on_team_label_right_click( self, event ):
+
+	def on_t_context( self, event ):
 		pass
 
 	def on_inspector_right_click( self, event ):
 		pass
+
+
+	def on_i_context( self, event ):
+		pass
+
+
+
+
 
 
 	def team_panelOnContextMenu( self, event ):
@@ -161,13 +212,13 @@ class MainFrame ( wx.Frame ):
 
 
 ###########################################################################
-## Class Status
+## Class TeamStatusFrame
 ###########################################################################
 
-class Status ( wx.Frame ):
+class TeamStatusFrame ( wx.Frame ):
 
 	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"Status", pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.CAPTION|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
+		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = u"FRC Inspection Manager Big Board", pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.CAPTION|wx.MAXIMIZE_BOX|wx.MINIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
@@ -187,10 +238,10 @@ class Status ( wx.Frame ):
 
 
 ###########################################################################
-## Class TeamStatus
+## Class TeamStatusPanel
 ###########################################################################
 
-class TeamStatus ( wx.Panel ):
+class TeamStatusPanel ( wx.Panel ):
 
 	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( 240,83 ), style = wx.BORDER_DEFAULT, name = wx.EmptyString ):
 		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )

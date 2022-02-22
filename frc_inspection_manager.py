@@ -1,90 +1,24 @@
-import uuid
+import os
+import datetime
 
 import wx
 import wx.grid
 
-import frc_inspection_manager_dummy_data
 import frc_inspection_manager_wx
-import enum
 
-
-InspectionReason = enum.Enum('InspectionReason', 'Initial Reinspect Final')
-
-
-class Inspection:
-    def __init__(self):
-        self.when = None
-        self.inspector_id: uuid = None
-        self.robot_weight = None
-        self.red_bumper_weight = None
-        self.blue_bumper_weight = None
-        self.robot_weight_with_red = None
-        self.robot_weight_with_blue = None
-        self.inspection_reason: InspectionReason = None
-        self.success = False
-
-
-TeamStatus = enum.Enum('TeamStatus', 'Absent Present Weighed Partial Inspected Final_completed')
-
-
-class Team:
-    def __init__(self):
-        self.team_number = None
-        self.team_name = None
-        self.team_status = None
-        self.inspections = []
-
-    def team_status_s(self):
-        return str(self.team_status).rpartition('.')[2]
-
-
-InspectorStatus = enum.Enum('InspectorStatus', 'Off Available Pit Break Field')
-
-
-class Inspector:
-    def __init__(self):
-        self.id: uuid = None
-        self.name = None
-        self.status = None
-        self.inspection_team = None
-        self.inspection_started = None
-        self.break_started = None
-
-    def status_s(self):
-        return str(self.status).rpartition('.')[2]
-
-
-class Database:
-    def __init__(self):
-        self.teams = []
-        self.inspectors = []
-        self.team_map = {}
-        self.inspector_map = {}
-
-    def make_indices(self):
-        self.team_map.clear()
-        for t in self.teams:
-            self.team_map[t.team_number] = t
-        self.inspector_map.clear()
-        for i in self.inspectors:
-            self.inspector_map[i.id] = i
-
-    def fetch_team(self, team_number):
-        return self.team_map[team_number]
-
-    def fetch_inspector(self, inspector_id):
-        return self.inspector_map[inspector_id]
-
-
-# this is global
-database: Database = None
+from frc_inspection_manager_database import *
 
 
 class MainFrame(frc_inspection_manager_wx.MainFrame):
     # constructor
-    def __init__(self, parent):
+    def __init__(self, parent, database: Database, status_frame=None):
         # initialize parent class
         super().__init__(parent)
+
+        self.database = database
+        self.inspector_for_context_menu = None
+        self.team_for_context_menu = None
+        self.status_frame = status_frame
 
         self.grid_table = self.team_grid.GetTable()
         self.team_grid.ClearGrid()
@@ -92,7 +26,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.team_to_row_map = {}
         self.row_to_team_map = {}
-        for i, t in enumerate(database.teams):
+        for i, t in enumerate(self.database.teams):
             self.team_to_row_map[t.team_number] = i
             self.row_to_team_map[i] = t
             self.update_team(t)
@@ -123,6 +57,9 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.inspector_grid.AutoSize()
         self.inspector_panel.Layout()
 
+    def set_status_frame(self, status_frame):
+        self.status_frame = status_frame
+
     def update_team(self, t: Team):
         row = self.team_to_row_map[t.team_number]
 
@@ -141,15 +78,39 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def on_team_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
-        self.team_panelOnContextMenu(event)
+        row = event.GetRow()
+        team = self.row_to_team_map[row]
+        self.display_team_context_menu(event, team)
         event.Skip()
+
+    def display_team_context_menu(self, event, team):
+        self.m_t_team.SetItemLabel(str(team.team_number))
+        self.team_for_context_menu = team
+        self.team_panelOnContextMenu(event)
+
+    def on_t_context(self, event: wx._core.CommandEvent):
+        print(type(event), event.GetId(), self.team_for_context_menu)
 
     def on_inspector_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
-        self.inspector_panelOnContextMenu(event)
+        row = event.GetRow()
+        inspector = self.row_to_inspector_map[row]
+        self.display_inspector_context_menu(event, inspector)
         event.Skip()
 
+    def display_inspector_context_menu(self, event, inspector):
+        self.m_i_inspector.SetItemLabel(inspector.name)
+        self.inspector_for_context_menu = inspector
+        self.inspector_panelOnContextMenu(event)
+
+    def on_i_context(self, event: wx._core.CommandEvent):
+        print(type(event), event.GetId(), self.inspector_for_context_menu)
+
     def my_on_close(self, event):
+        print(event.GetEventType(), event.GetEventObject())
+        event.Skip()
+
+    def xx_my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
         if event.CanVeto():
             if wx.MessageBox("The file has not been saved... continue closing?",
@@ -159,24 +120,28 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 return
         event.Skip()
 
-
-class Status(frc_inspection_manager_wx.Status):
+class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     # constructor
-    def __init__(self, parent):
+    def __init__(self, parent, database: Database, main_frame=None):
         # initialize parent class
         super().__init__(parent)
 
+        self.database = database
+        self.main_frame = main_frame
         self.team_to_gui_map = {}
 
         s = wx.GridSizer(8, 8, 2, 2)
-        for t in database.teams:
-            p = frc_inspection_manager_wx.TeamStatus(self)
+        for t in self.database.teams:
+            p = frc_inspection_manager_wx.TeamStatusPanel(self)
             self.team_to_gui_map[t.team_number] = p
             self.update_team_status(t)
             s.Add(p, 1, wx.EXPAND | wx.ALL, 2)
         s.SetSizeHints(self)
         self.SetSizer(s, deleteOld=True)
         self.Layout()
+
+    def set_main_frame(self, main_frame):
+        self.main_frame = main_frame
 
     def update_team_status(self, t: Team):
         p = self.team_to_gui_map[t.team_number]
@@ -191,18 +156,33 @@ class Status(frc_inspection_manager_wx.Status):
 
 
 if __name__ == '__main__':
-    # When this module is run (not imported) then create the app, the
-    # frame, show it, and start the event loop.
-    database = frc_inspection_manager_dummy_data.dummy_database()
-    database.make_indices()
+    database = Database()
+    fn = 'misjo.imd'
+    with open(fn, 'r') as fp:
+        j = fp.read()
+        database.from_json(j)
+        print(database)
 
     app = wx.App()
 
-    frm1 = MainFrame(None)
+    frm1 = MainFrame(None, database)
     frm1.SetStatusText("w1!")
     frm1.Show()
 
-    frm2 = Status(frm1)
+    frm2 = TeamStatusFrame(frm1, database, main_frame=frm1)
+    frm1.set_status_frame(frm2)
+    frm2.Iconize(True)
     frm2.Show()
 
     app.MainLoop()
+
+    if database.isDirty():
+        j = database.as_json()
+        with open(fn + '.tmp', 'w') as fp:
+            fp.write(j)
+
+        if os.path.isfile(fn):
+            ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            os.rename (fn, fn + '_' + ts)
+
+        os.rename(fn + '.tmp', fn)
