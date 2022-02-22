@@ -10,7 +10,6 @@
 import wx
 import wx.xrc
 import wx.grid
-import wx.aui
 
 ###########################################################################
 ## Class MainFrame
@@ -42,10 +41,10 @@ class MainFrame ( wx.Frame ):
 		bSizer11 = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_notebook1 = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_panel1 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.team_panel = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer1 = wx.BoxSizer( wx.VERTICAL )
 
-		self.team_grid = wx.grid.Grid( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.team_grid = wx.grid.Grid( self.team_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
 		self.team_grid.CreateGrid( 1, 2 )
@@ -71,14 +70,20 @@ class MainFrame ( wx.Frame ):
 		bSizer1.Add( self.team_grid, 0, wx.ALL|wx.EXPAND, 5 )
 
 
-		self.m_panel1.SetSizer( bSizer1 )
-		self.m_panel1.Layout()
-		bSizer1.Fit( self.m_panel1 )
-		self.m_notebook1.AddPage( self.m_panel1, u"Teams", True )
-		self.m_panel2 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		self.team_panel.SetSizer( bSizer1 )
+		self.team_panel.Layout()
+		bSizer1.Fit( self.team_panel )
+		self.team_popup_menu = wx.Menu()
+		self.m_menuItem5 = wx.MenuItem( self.team_popup_menu, wx.ID_ANY, u"Weighin", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_menuItem5 )
+
+		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
+
+		self.m_notebook1.AddPage( self.team_panel, u"Teams", True )
+		self.inspector_panel = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer2 = wx.BoxSizer( wx.VERTICAL )
 
-		self.inspector_grid = wx.grid.Grid( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.inspector_grid = wx.grid.Grid( self.inspector_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
 		self.inspector_grid.CreateGrid( 1, 2 )
@@ -104,10 +109,16 @@ class MainFrame ( wx.Frame ):
 		bSizer2.Add( self.inspector_grid, 0, wx.ALL|wx.EXPAND, 5 )
 
 
-		self.m_panel2.SetSizer( bSizer2 )
-		self.m_panel2.Layout()
-		bSizer2.Fit( self.m_panel2 )
-		self.m_notebook1.AddPage( self.m_panel2, u"Inspectors", False )
+		self.inspector_panel.SetSizer( bSizer2 )
+		self.inspector_panel.Layout()
+		bSizer2.Fit( self.inspector_panel )
+		self.inspector_popup_menu = wx.Menu()
+		self.m_menuItem6 = wx.MenuItem( self.inspector_popup_menu, wx.ID_ANY, u"Go on break", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_menuItem6 )
+
+		self.inspector_panel.Bind( wx.EVT_RIGHT_DOWN, self.inspector_panelOnContextMenu )
+
+		self.m_notebook1.AddPage( self.inspector_panel, u"Inspectors", False )
 
 		bSizer11.Add( self.m_notebook1, 1, wx.EXPAND |wx.ALL, 5 )
 
@@ -119,6 +130,10 @@ class MainFrame ( wx.Frame ):
 
 		# Connect Events
 		self.Bind( wx.EVT_CLOSE, self.my_on_close )
+		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
+		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_label_right_click )
+		self.inspector_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_inspector_right_click )
+		self.inspector_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_inspector_right_click )
 
 	def __del__( self ):
 		pass
@@ -127,6 +142,22 @@ class MainFrame ( wx.Frame ):
 	# Virtual event handlers, override them in your derived class
 	def my_on_close( self, event ):
 		pass
+
+	def on_team_right_click( self, event ):
+		pass
+
+	def on_team_label_right_click( self, event ):
+		pass
+
+	def on_inspector_right_click( self, event ):
+		pass
+
+
+	def team_panelOnContextMenu( self, event ):
+		self.team_panel.PopupMenu( self.team_popup_menu, event.GetPosition() )
+
+	def inspector_panelOnContextMenu( self, event ):
+		self.inspector_panel.PopupMenu( self.inspector_popup_menu, event.GetPosition() )
 
 
 ###########################################################################
@@ -190,121 +221,6 @@ class TeamStatus ( wx.Panel ):
 		self.Layout()
 
 	def __del__( self ):
-		pass
-
-
-###########################################################################
-## Class MainFrameAUI
-###########################################################################
-
-class MainFrameAUI ( wx.Frame ):
-
-	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 500,300 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
-
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
-		self.m_mgr = wx.aui.AuiManager()
-		self.m_mgr.SetManagedWindow( self )
-		self.m_mgr.SetFlags(wx.aui.AUI_MGR_ALLOW_ACTIVE_PANE|wx.aui.AUI_MGR_DEFAULT|wx.aui.AUI_MGR_RECTANGLE_HINT|wx.aui.AUI_MGR_TRANSPARENT_DRAG)
-
-		self.m_menubar1 = wx.MenuBar( 0 )
-		self.m_menu1 = wx.Menu()
-		self.m_file_open = wx.MenuItem( self.m_menu1, wx.ID_ANY, u"Open", wx.EmptyString, wx.ITEM_NORMAL )
-		self.m_menu1.Append( self.m_file_open )
-
-		self.m_menubar1.Append( self.m_menu1, u"File" )
-
-		self.m_menu2 = wx.Menu()
-		self.m_help_about = wx.MenuItem( self.m_menu2, wx.ID_ANY, u"About", wx.EmptyString, wx.ITEM_NORMAL )
-		self.m_menu2.Append( self.m_help_about )
-
-		self.m_menubar1.Append( self.m_menu2, u"Help" )
-
-		self.SetMenuBar( self.m_menubar1 )
-
-		self.m_statusBar1 = self.CreateStatusBar( 1, wx.STB_SIZEGRIP, wx.ID_ANY )
-		self.m_notebook1 = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_mgr.AddPane( self.m_notebook1, wx.aui.AuiPaneInfo() .Left() .PinButton( True ).Dock().Resizable().FloatingSize( wx.DefaultSize ) )
-
-		self.m_panel1 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		bSizer1 = wx.BoxSizer( wx.VERTICAL )
-
-		self.team_grid = wx.grid.Grid( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-
-		# Grid
-		self.team_grid.CreateGrid( 5, 5 )
-		self.team_grid.EnableEditing( True )
-		self.team_grid.EnableGridLines( True )
-		self.team_grid.EnableDragGridSize( False )
-		self.team_grid.SetMargins( 0, 0 )
-
-		# Columns
-		self.team_grid.EnableDragColMove( False )
-		self.team_grid.EnableDragColSize( True )
-		self.team_grid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
-
-		# Rows
-		self.team_grid.EnableDragRowSize( True )
-		self.team_grid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
-
-		# Label Appearance
-
-		# Cell Defaults
-		self.team_grid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-		bSizer1.Add( self.team_grid, 0, wx.ALL, 5 )
-
-
-		self.m_panel1.SetSizer( bSizer1 )
-		self.m_panel1.Layout()
-		bSizer1.Fit( self.m_panel1 )
-		self.m_notebook1.AddPage( self.m_panel1, u"a page", False )
-		self.m_panel2 = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		bSizer2 = wx.BoxSizer( wx.VERTICAL )
-
-		self.inspector_grid = wx.grid.Grid( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-
-		# Grid
-		self.inspector_grid.CreateGrid( 5, 5 )
-		self.inspector_grid.EnableEditing( False )
-		self.inspector_grid.EnableGridLines( False )
-		self.inspector_grid.EnableDragGridSize( False )
-		self.inspector_grid.SetMargins( 0, 0 )
-
-		# Columns
-		self.inspector_grid.EnableDragColMove( False )
-		self.inspector_grid.EnableDragColSize( True )
-		self.inspector_grid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
-
-		# Rows
-		self.inspector_grid.EnableDragRowSize( True )
-		self.inspector_grid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
-
-		# Label Appearance
-
-		# Cell Defaults
-		self.inspector_grid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-		bSizer2.Add( self.inspector_grid, 0, wx.ALL, 5 )
-
-
-		self.m_panel2.SetSizer( bSizer2 )
-		self.m_panel2.Layout()
-		bSizer2.Fit( self.m_panel2 )
-		self.m_notebook1.AddPage( self.m_panel2, u"a page", False )
-
-
-		self.m_mgr.Update()
-		self.Centre( wx.BOTH )
-
-		# Connect Events
-		self.Bind( wx.EVT_CLOSE, self.my_on_close )
-
-	def __del__( self ):
-		self.m_mgr.UnInit()
-
-
-
-	# Virtual event handlers, override them in your derived class
-	def my_on_close( self, event ):
 		pass
 
 

@@ -103,7 +103,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.team_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
         self.team_grid.AutoSize()
-        self.m_panel1.Layout()
+        self.team_panel.Layout()
 
         self.inspector_table = self.inspector_grid.GetTable()
         self.inspector_grid.ClearGrid()
@@ -121,7 +121,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         # self.inspector_grid.SetColLabelAlignment(wx.ALIGN_CENTER, wx.ALIGN_CENTER)
         self.inspector_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
         self.inspector_grid.AutoSize()
-        self.m_panel2.Layout()
+        self.inspector_panel.Layout()
 
     def update_team(self, t: Team):
         row = self.team_to_row_map[t.team_number]
@@ -139,7 +139,18 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.inspector_grid.SetCellValue(row, 1, inspector.status_s())
         self.inspector_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
 
+    def on_team_right_click(self, event):
+        print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
+        self.team_panelOnContextMenu(event)
+        event.Skip()
+
+    def on_inspector_right_click(self, event):
+        print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
+        self.inspector_panelOnContextMenu(event)
+        event.Skip()
+
     def my_on_close(self, event):
+        print(event.GetEventType(), event.GetEventObject())
         if event.CanVeto():
             if wx.MessageBox("The file has not been saved... continue closing?",
                              "Please confirm",
@@ -167,7 +178,7 @@ class Status(frc_inspection_manager_wx.Status):
         self.SetSizer(s, deleteOld=True)
         self.Layout()
 
-    def update_team_status (self, t: Team):
+    def update_team_status(self, t: Team):
         p = self.team_to_gui_map[t.team_number]
         p.team_number.SetLabel(str(t.team_number))
         p.team_status.SetLabel(t.team_status_s())
