@@ -637,10 +637,10 @@
                                         <property name="checked">0</property>
                                         <property name="enabled">1</property>
                                         <property name="help"></property>
-                                        <property name="id">ID_I_NOT_WORKING</property>
+                                        <property name="id">ID_I_OFF</property>
                                         <property name="kind">wxITEM_NORMAL</property>
-                                        <property name="label">&amp;Not working</property>
-                                        <property name="name">m_i_not_working</property>
+                                        <property name="label">&amp;Off</property>
+                                        <property name="name">m_i_off</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>

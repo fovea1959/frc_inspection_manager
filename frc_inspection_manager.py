@@ -90,6 +90,16 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def on_t_context(self, event: wx._core.CommandEvent):
         print(type(event), event.GetId(), self.team_for_context_menu)
+        id = event.GetId()
+        team = self.team_for_context_menu
+        if id == frc_inspection_manager_wx.ID_T_WEIGHIN:
+            team.team_status = TeamStatus.Weighed
+        else:
+            self.SetStatusText("Got funny command!")
+
+        self.database.mark_dirty()
+        self.update_team(team)
+        self.status_frame.update_team(team)
 
     def on_inspector_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
@@ -105,11 +115,36 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def on_i_context(self, event: wx._core.CommandEvent):
         print(type(event), event.GetId(), self.inspector_for_context_menu)
+        id = event.GetId()
+        inspector = self.inspector_for_context_menu
+
+        if id == frc_inspection_manager_wx.ID_I_PIT:
+            inspector.status = InspectorStatus.Pit
+        elif id == frc_inspection_manager_wx.ID_I_FIELD:
+            inspector.status = InspectorStatus.Field
+        elif id == frc_inspection_manager_wx.ID_I_BREAK:
+            inspector.status = InspectorStatus.Break
+        elif id == frc_inspection_manager_wx.ID_I_AVAILABLE:
+            inspector.status = InspectorStatus.Available
+        elif id == frc_inspection_manager_wx.ID_I_OFF:
+            inspector.status = InspectorStatus.Off
+        elif id == frc_inspection_manager_wx.ID_I_PIT_RETURN:
+            # TODO need to record inspection result!
+            inspector.status = InspectorStatus.Available
+        else:
+            self.SetStatusText("Got funny command!")
+
+        self.database.mark_dirty()
+        self.update_inspector(inspector)
+
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
         event.Skip()
 
+    """
+    this is obsolete, but keeping for reference purposes
+    """
     def xx_my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
         if event.CanVeto():
@@ -119,6 +154,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 event.Veto()
                 return
         event.Skip()
+
 
 class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     # constructor
@@ -134,7 +170,7 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
         for t in self.database.teams:
             p = frc_inspection_manager_wx.TeamStatusPanel(self)
             self.team_to_gui_map[t.team_number] = p
-            self.update_team_status(t)
+            self.update_team(t)
             s.Add(p, 1, wx.EXPAND | wx.ALL, 2)
         s.SetSizeHints(self)
         self.SetSizer(s, deleteOld=True)
@@ -143,11 +179,14 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     def set_main_frame(self, main_frame):
         self.main_frame = main_frame
 
-    def update_team_status(self, t: Team):
+    def update_team(self, t: Team):
         p = self.team_to_gui_map[t.team_number]
         p.team_number.SetLabel(str(t.team_number))
         p.team_status.SetLabel(t.team_status_s())
 
+    """
+    really not needed; no close button!
+    """
     def my_on_close(self, event):
         if event.CanVeto():
             event.Veto()
@@ -166,7 +205,6 @@ if __name__ == '__main__':
     app = wx.App()
 
     frm1 = MainFrame(None, database)
-    frm1.SetStatusText("w1!")
     frm1.Show()
 
     frm2 = TeamStatusFrame(frm1, database, main_frame=frm1)
@@ -176,7 +214,7 @@ if __name__ == '__main__':
 
     app.MainLoop()
 
-    if database.isDirty():
+    if database.is_dirty():
         j = database.as_json()
         with open(fn + '.tmp', 'w') as fp:
             fp.write(j)

@@ -3,10 +3,14 @@ import jsonpickle
 import json
 import random
 import uuid
-import enum
+from enum import Enum, auto
 
 
-InspectionReason = enum.Enum('InspectionReason', 'Initial Reinspect Final')
+class InspectionReason(Enum):
+    Weighin = auto()
+    Initial = auto()
+    Reinspect = auto()
+    Final = auto()
 
 
 class Inspection:
@@ -22,14 +26,19 @@ class Inspection:
         self.success = False
 
 
-TeamStatus = enum.Enum('TeamStatus', 'Absent Present Weighed Partial Inspected Final_completed')
+class TeamStatus(Enum):
+    Absent = auto()
+    Weighed = auto()
+    Partial = auto()
+    Inspected = auto()
+    Final_Completed = auto()
 
 
 class Team:
     def __init__(self):
         self.team_number = None
         self.team_name = None
-        self.team_status = None
+        self.team_status = TeamStatus.Absent
         self.inspections = []
 
     def __str__(self):
@@ -39,14 +48,19 @@ class Team:
         return str(self.team_status).rpartition('.')[2]
 
 
-InspectorStatus = enum.Enum('InspectorStatus', 'Off Available Pit Break Field')
+class InspectorStatus(Enum):
+    Off = auto()
+    Available = auto()
+    Pit = auto()
+    Break = auto()
+    Field = auto()
 
 
 class Inspector:
     def __init__(self):
-        self.id: uuid = None
+        self.id = uuid.uuid4()
         self.name = None
-        self.status = None
+        self.status = InspectorStatus.Off
         self.inspection_team = None
         self.inspection_started = None
         self.break_started = None
@@ -101,7 +115,7 @@ class Database:
 
     def from_json(self, j):
         save_data = jsonpickle.decode(j)
-        self.teams = save_data.teams
+        self.teams = sorted(save_data.teams, key=lambda t: t.team_number)
         self.inspectors = save_data.inspectors
         self.make_indices()
         self.dirty = False
@@ -123,7 +137,6 @@ def dummy_inspector_list():
     for i in range(0, 8):
         inspector = Inspector()
         inspector.name = "Inspector " + str(i)
-        inspector.id = uuid.uuid4()
         inspector.status = InspectorStatus.Available
         inspectors.append(inspector)
 
@@ -153,6 +166,10 @@ def database_from_tba(fn):
 
 if __name__ == '__main__':
     d = database_from_tba('2022misjo_teams.json')
+    i1 = Inspector()
+    i1.name = "Doug Wegscheid"
+    d.inspectors.append(i1)
+
     print(d)
     j = d.as_json()
     with open('misjo.imd', 'w') as fp:

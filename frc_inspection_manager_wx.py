@@ -17,7 +17,7 @@ ID_I_PIT_RETURN = 1002
 ID_I_AVAILABLE = 1003
 ID_I_FIELD = 1004
 ID_I_BREAK = 1005
-ID_I_NOT_WORKING = 1006
+ID_I_OFF = 1006
 
 ###########################################################################
 ## Class MainFrame
@@ -148,8 +148,8 @@ class MainFrame ( wx.Frame ):
 		self.m_i_break = wx.MenuItem( self.inspector_popup_menu, ID_I_BREAK, u"Go on &break", wx.EmptyString, wx.ITEM_NORMAL )
 		self.inspector_popup_menu.Append( self.m_i_break )
 
-		self.m_i_not_working = wx.MenuItem( self.inspector_popup_menu, ID_I_NOT_WORKING, u"&Not working", wx.EmptyString, wx.ITEM_NORMAL )
-		self.inspector_popup_menu.Append( self.m_i_not_working )
+		self.m_i_off = wx.MenuItem( self.inspector_popup_menu, ID_I_OFF, u"&Off", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_off )
 
 		self.inspector_panel.Bind( wx.EVT_RIGHT_DOWN, self.inspector_panelOnContextMenu )
 
@@ -175,7 +175,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_available.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_field.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_break.GetId() )
-		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_not_working.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_off.GetId() )
 
 	def __del__( self ):
 		pass
