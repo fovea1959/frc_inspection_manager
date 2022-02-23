@@ -65,7 +65,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.team_grid.SetRowLabelValue(row, str(t.number))
         self.team_grid.SetCellValue(row, 0, t.name)
-        s = t.team_status_s
+        s = t.status_s
         if t.inspector_in_pit is not None:
             inspector = self.database.fetch_inspector(t.inspector_in_pit)
             s += "; " + inspector.name + " in pit"
@@ -92,7 +92,6 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             s = str(out_time)
         self.inspector_grid.SetCellValue(row, 2, s)
 
-
     def on_timer(self, event):
         for inspector in self.row_to_inspector_map.values():
             self.update_inspector_out_timer(inspector)
@@ -107,14 +106,19 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def display_team_context_menu(self, event, team):
         self.m_t_team.SetItemLabel(str(team.number))
         self.team_for_context_menu = team
+
+        self.m_t_checkin.Check(team.checked_in)
+
         self.team_panelOnContextMenu(event)
 
     def on_t_context(self, event: wx._core.CommandEvent):
         print(type(event), event.GetId(), self.team_for_context_menu)
-        id = event.GetId()
+        event_id = event.GetId()
         team = self.team_for_context_menu
-        if id == frc_inspection_manager_wx.ID_T_WEIGHIN:
-            team.status = TeamStatus.Weighed
+        if event_id == frc_inspection_manager_wx.ID_T_CHECKIN:
+            team.checked_in = not team.checked_in
+        elif event_id == frc_inspection_manager_wx.ID_T_WEIGHIN:
+            weighed_in = self.weighin_dialog_box()
         else:
             self.SetStatusText("Got funny command!")
 
@@ -140,7 +144,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         enable.remove(self.m_i_pit_return)
         if inspector.status == InspectorStatus.Off:
             enable.remove(self.m_i_off)
-        elif inspector.status == InspectorStatus.Pit:
+        elif inspector.status == InspectorStatus.In_Pit:
             enable = [self.m_i_pit_return]
         elif inspector.status == InspectorStatus.Field:
             enable.remove(self.m_i_field)
@@ -164,16 +168,11 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         inspector = self.inspector_for_context_menu
         current_status = inspector.status
 
-        need_an_inspection_result = False
-
-        if inspector.status == frc_inspection_manager_wx.ID_I_PIT:
-            need_an_inspection_result = True
-            # put dialog box up here, then exit
-
         new_status = None
         if event_id == frc_inspection_manager_wx.ID_I_PIT:
-            # this will take care of setting the new status
-            self.inspection_start_dialog_box(inspector=inspector)
+            # this will take care of setting the new status and updating GUI
+            # if inspection was started
+            inspection_started = self.inspection_start_dialog_box(inspector=inspector)
         elif event_id == frc_inspection_manager_wx.ID_I_FIELD:
             new_status = InspectorStatus.Field
         elif event_id == frc_inspection_manager_wx.ID_I_BREAK:
@@ -183,6 +182,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         elif event_id == frc_inspection_manager_wx.ID_I_OFF:
             new_status = InspectorStatus.Off
         elif event_id == frc_inspection_manager_wx.ID_I_PIT_RETURN:
+
             # TODO need to record inspection result!
             new_status = InspectorStatus.Available
         else:
@@ -203,28 +203,53 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             choices = [ i.name for i in self.database.inspectors]
             prompt = "Which inspector is going to team " + str(team.number) + ", " + team.name
 
+        inspection_started = False
         if choices is not None:
-            dlg = wx.SingleChoiceDialog(self, prompt, "Start Inspection", choices, wx.CHOICEDLG_STYLE)
-            if dlg.ShowModal() == wx.ID_OK:
-                i = dlg.GetSelection()
-                if inspector is None:
-                    inspector = self.database.inspectors[i]
-                else:
-                    team = self.database.teams[i]
+            # "with" statement will do implicit destroy on dlg
+            with wx.SingleChoiceDialog(self, prompt, "Start Inspection", choices, wx.CHOICEDLG_STYLE) as dlg:
+                if dlg.ShowModal() == wx.ID_OK:
+                    i = dlg.GetSelection()
+                    if inspector is None:
+                        inspector = self.database.inspectors[i]
+                    else:
+                        team = self.database.teams[i]
 
-                inspector.status = InspectorStatus.Pit
-                inspector.inspection_team_number = team.number
-                inspector.time_away_started = datetime.datetime.now()
-                team.inspector_in_pit = inspector.id
+                    inspector.status = InspectorStatus.In_Pit
+                    inspector.inspection_team_number = team.number
+                    inspector.time_away_started = datetime.datetime.now()
+                    team.inspector_in_pit = inspector.id
+
+                    self.update_team(team)
+                    self.status_frame.update_team(team)
+                    self.update_inspector(inspector)
+
+                    self.database.mark_dirty()
+
+        return inspection_started
+
+    def weighin_dialog_box(self):
+        team = self.team_for_context_menu
+        with WeighinDialog(self, self.database) as dlg:
+            #dlg.text_ctrl_1.SetValue(self.text_ctrl_1.GetValue())
+            # show as modal dialog
+            result = dlg.ShowModal()
+            print(f"weighin dialog box {result}")
+            if result == wx.ID_OK:
+                # user has hit OK -> read text control value
+                print('OK!')
+
+                # need to record weigh information
+                weighin = Inspection()
+                weighin.robot_weight = 100.1
+                weighin.inspection_reason = InspectionReason.Weighin
+
+                team.inspections.append(weighin)
+
+                self.database.mark_dirty()
 
                 self.update_team(team)
                 self.status_frame.update_team(team)
-                self.update_inspector(inspector)
 
-                self.database.mark_dirty()
-            dlg.Destroy()
-
-        return True
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
@@ -270,7 +295,7 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     def update_team(self, t: Team):
         p = self.team_to_gui_map[t.number]
         p.team_number.SetLabel(str(t.number))
-        s = t.team_status_s
+        s = t.status_s
         if t.inspector_in_pit is not None:
             s += "; inspector in pit"
         p.team_status.SetLabel(s)
@@ -282,6 +307,24 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
         if event.CanVeto():
             event.Veto()
         else:
+            event.Skip()
+
+
+class WeighinDialog(frc_inspection_manager_wx.WeighinDialog):
+    def __init__(self, parent, database):
+        # initialize parent class
+        super().__init__(parent)
+
+        self.database = database
+
+    def on_OK_button(self, event):
+        print("Event handler 'on_button_OK' called")
+        # don't call Skip if you want to keep the dialog open
+        if False:  # maybe also check self.validate_contents()
+            print("Checkbox not checked -> don't close the dialog")
+            wx.Bell()
+        else:
+            print("Checkbox checked -> close the dialog")
             event.Skip()
 
 

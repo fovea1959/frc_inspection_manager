@@ -17,7 +17,8 @@ ID_I_FIELD = 1002
 ID_I_BREAK = 1003
 ID_I_OFF = 1004
 ID_I_PIT_RETURN = 1005
-ID_T_WEIGHIN = 1006
+ID_T_CHECKIN = 1006
+ID_T_WEIGHIN = 1007
 
 ###########################################################################
 ## Class MainFrame
@@ -150,7 +151,11 @@ class MainFrame ( wx.Frame ):
 
 		self.team_popup_menu.AppendSeparator()
 
-		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weighin", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_t_checkin = wx.MenuItem( self.team_popup_menu, ID_T_CHECKIN, u"&Check in"+ u"\t" + u"c", wx.EmptyString, wx.ITEM_CHECK )
+		self.m_t_checkin.SetBitmap( wx.NullBitmap )
+		self.team_popup_menu.Append( self.m_t_checkin )
+
+		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weigh In", wx.EmptyString, wx.ITEM_NORMAL )
 		self.team_popup_menu.Append( self.m_t_weighin )
 
 		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
@@ -181,6 +186,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit_return.GetId() )
 		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
 		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_checkin.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
 		self.Bind( wx.EVT_TIMER, self.on_timer, id=wx.ID_ANY )
 
@@ -211,6 +217,7 @@ class MainFrame ( wx.Frame ):
 	def on_t_context( self, event ):
 		pass
 
+
 	def on_timer( self, event ):
 		pass
 
@@ -219,6 +226,96 @@ class MainFrame ( wx.Frame ):
 
 	def team_panelOnContextMenu( self, event ):
 		self.team_panel.PopupMenu( self.team_popup_menu, event.GetPosition() )
+
+
+###########################################################################
+## Class WeighinDialog
+###########################################################################
+
+class WeighinDialog ( wx.Dialog ):
+
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Weighin", pos = wx.DefaultPosition, size = wx.Size( 356,200 ), style = wx.DEFAULT_DIALOG_STYLE )
+
+		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+
+		bSizer4 = wx.BoxSizer( wx.VERTICAL )
+
+		fgSizer1 = wx.FlexGridSizer( 4, 2, 0, 0 )
+		fgSizer1.AddGrowableCol( 1, 1 )
+		fgSizer1.SetFlexibleDirection( wx.HORIZONTAL )
+		fgSizer1.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+		self.m_staticText3 = wx.StaticText( self, wx.ID_ANY, u"Robot Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.m_staticText3.Wrap( -1 )
+
+		fgSizer1.Add( self.m_staticText3, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		self.robot_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		fgSizer1.Add( self.robot_weight, 1, wx.ALL|wx.EXPAND, 5 )
+
+		self.m_staticText4 = wx.StaticText( self, wx.ID_ANY, u"Red Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.m_staticText4.Wrap( -1 )
+
+		fgSizer1.Add( self.m_staticText4, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		self.red_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.red_bumper_weight.SetForegroundColour( wx.Colour( 255, 0, 0 ) )
+
+		fgSizer1.Add( self.red_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
+
+		self.m_staticText5 = wx.StaticText( self, wx.ID_ANY, u"Blue Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.m_staticText5.Wrap( -1 )
+
+		fgSizer1.Add( self.m_staticText5, 0, wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
+
+		self.blue_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.blue_bumper_weight.SetForegroundColour( wx.Colour( 0, 0, 255 ) )
+
+		fgSizer1.Add( self.blue_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
+
+		self.m_staticText6 = wx.StaticText( self, wx.ID_ANY, u"Inspector", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.m_staticText6.Wrap( -1 )
+
+		fgSizer1.Add( self.m_staticText6, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		m_choice1Choices = []
+		self.m_choice1 = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice1Choices, 0 )
+		self.m_choice1.SetSelection( 0 )
+		fgSizer1.Add( self.m_choice1, 0, wx.ALL|wx.EXPAND, 5 )
+
+
+		bSizer4.Add( fgSizer1, 1, wx.EXPAND, 5 )
+
+		bSizer6 = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.ok_bottom = wx.Button( self, wx.ID_OK, u"&OK", wx.DefaultPosition, wx.DefaultSize, 0 )
+
+		self.ok_bottom.SetDefault()
+		bSizer6.Add( self.ok_bottom, 0, wx.ALL, 5 )
+
+		self.cancel_button = wx.Button( self, wx.ID_CANCEL, u"&Cancel", wx.DefaultPosition, wx.DefaultSize, 0 )
+		bSizer6.Add( self.cancel_button, 0, wx.ALL|wx.LEFT, 5 )
+
+
+		bSizer4.Add( bSizer6, 1, wx.ALIGN_CENTER, 5 )
+
+
+		self.SetSizer( bSizer4 )
+		self.Layout()
+
+		self.Centre( wx.BOTH )
+
+		# Connect Events
+		self.ok_bottom.Bind( wx.EVT_BUTTON, self.on_OK_button )
+
+	def __del__( self ):
+		pass
+
+
+	# Virtual event handlers, override them in your derived class
+	def on_OK_button( self, event ):
+		pass
 
 
 ###########################################################################

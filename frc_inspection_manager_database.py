@@ -28,7 +28,7 @@ class Inspection:
 
 class TeamStatus(Enum):
     Absent = auto()
-    CheckedIn = auto()
+    Checked_In = auto()
     Weighed = auto()
     Partial = auto()
     Inspected = auto()
@@ -40,7 +40,7 @@ class Team:
     def __init__(self):
         self.number = None
         self.name = None
-        self.checked_in = False;
+        self.checked_in = False
         self.inspections = []
         self.inspector_in_pit = None        # inspector.id
 
@@ -48,14 +48,14 @@ class Team:
         return "Team " + str(self.number)
 
     @property
-    def team_status_s(self):
-        return str(self.status).rpartition('.')[2]
+    def status_s(self):
+        return str(self.status).rpartition('.')[2].replace('_', ' ')
 
     @property
     def status(self):
-        possible_status = set((TeamStatus.Absent,))
+        possible_status = {TeamStatus.Absent}
         if self.checked_in:
-            possible_status.add(TeamStatus.CheckedIn)
+            possible_status.add(TeamStatus.Checked_In)
         for inspection in self.inspections:
             if inspection.robot_weight is not None:
                 possible_status.add(TeamStatus.Weighed)
@@ -67,17 +67,15 @@ class Team:
                 else:
                     possible_status.add(TeamStatus.Final_Incomplete)
         print('1: ', possible_status)
-        most_positive_status_value = sorted(list(possible_status), key=lambda r: r.value)[-1]
-        print('2: ', most_positive_status_value)
-        most_positive_status = TeamStatus(most_positive_status_value)
-        print('3: ', most_positive_status)
+        most_positive_status = sorted(possible_status, reverse=True, key=lambda r: r.value)[0]
+        print('2: ', most_positive_status)
         return most_positive_status
 
 
 class InspectorStatus(Enum):
     Off = auto()
     Available = auto()
-    Pit = auto()
+    In_Pit = auto()
     Break = auto()
     Field = auto()
 
@@ -95,7 +93,7 @@ class Inspector:
 
     @property
     def status_s(self):
-        s = str(self.status).rpartition('.')[2]
+        s = str(self.status).rpartition('.')[2].replace('_', ' ')
         if self.inspection_team_number is not None:
             s += f" {self.inspection_team_number}"
         return s
