@@ -72,6 +72,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.team_grid.SetCellValue(row, 1, s)
         self.team_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
         self.team_grid.AutoSize()
+        self.team_panel.Layout()
 
     def update_inspector(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
@@ -83,6 +84,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.inspector_grid.SetCellValue(row, 1, s)
         self.update_inspector_out_timer(inspector)
         self.inspector_grid.AutoSize()
+        self.inspector_panel.Layout()
 
     def update_inspector_out_timer(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
