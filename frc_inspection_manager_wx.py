@@ -11,12 +11,12 @@ import wx
 import wx.xrc
 import wx.grid
 
-ID_I_PIT = 1000
-ID_I_PIT_RETURN = 1001
-ID_I_AVAILABLE = 1002
-ID_I_FIELD = 1003
-ID_I_BREAK = 1004
-ID_I_OFF = 1005
+ID_I_AVAILABLE = 1000
+ID_I_PIT = 1001
+ID_I_FIELD = 1002
+ID_I_BREAK = 1003
+ID_I_OFF = 1004
+ID_I_PIT_RETURN = 1005
 ID_T_WEIGHIN = 1006
 
 ###########################################################################
@@ -55,7 +55,7 @@ class MainFrame ( wx.Frame ):
 		self.inspector_grid = wx.grid.Grid( self.inspector_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
-		self.inspector_grid.CreateGrid( 1, 3 )
+		self.inspector_grid.CreateGrid( 0, 3 )
 		self.inspector_grid.EnableEditing( False )
 		self.inspector_grid.EnableGridLines( True )
 		self.inspector_grid.EnableDragGridSize( False )
@@ -88,14 +88,11 @@ class MainFrame ( wx.Frame ):
 
 		self.inspector_popup_menu.AppendSeparator()
 
-		self.m_i_pit = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT, u"Send to &pit for inspection", wx.EmptyString, wx.ITEM_NORMAL )
-		self.inspector_popup_menu.Append( self.m_i_pit )
-
-		self.m_i_pit_return = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT_RETURN, u"Pit &return", wx.EmptyString, wx.ITEM_NORMAL )
-		self.inspector_popup_menu.Append( self.m_i_pit_return )
-
 		self.m_i_available = wx.MenuItem( self.inspector_popup_menu, ID_I_AVAILABLE, u"&Available", wx.EmptyString, wx.ITEM_NORMAL )
 		self.inspector_popup_menu.Append( self.m_i_available )
+
+		self.m_i_pit = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT, u"Send to &pit for inspection", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_pit )
 
 		self.m_i_field = wx.MenuItem( self.inspector_popup_menu, ID_I_FIELD, u"Going to &field", wx.EmptyString, wx.ITEM_NORMAL )
 		self.inspector_popup_menu.Append( self.m_i_field )
@@ -106,6 +103,11 @@ class MainFrame ( wx.Frame ):
 		self.m_i_off = wx.MenuItem( self.inspector_popup_menu, ID_I_OFF, u"&Off", wx.EmptyString, wx.ITEM_NORMAL )
 		self.inspector_popup_menu.Append( self.m_i_off )
 
+		self.inspector_popup_menu.AppendSeparator()
+
+		self.m_i_pit_return = wx.MenuItem( self.inspector_popup_menu, ID_I_PIT_RETURN, u"Pit &return", wx.EmptyString, wx.ITEM_NORMAL )
+		self.inspector_popup_menu.Append( self.m_i_pit_return )
+
 		self.inspector_panel.Bind( wx.EVT_RIGHT_DOWN, self.inspector_panelOnContextMenu )
 
 		self.m_notebook1.AddPage( self.inspector_panel, u"Inspectors", True )
@@ -115,7 +117,7 @@ class MainFrame ( wx.Frame ):
 		self.team_grid = wx.grid.Grid( self.team_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
-		self.team_grid.CreateGrid( 1, 2 )
+		self.team_grid.CreateGrid( 0, 2 )
 		self.team_grid.EnableEditing( False )
 		self.team_grid.EnableGridLines( True )
 		self.team_grid.EnableDragGridSize( False )
@@ -171,12 +173,12 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_CLOSE, self.my_on_close )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_inspector_right_click )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_inspector_right_click )
-		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit.GetId() )
-		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit_return.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_available.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_field.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_break.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_off.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit_return.GetId() )
 		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
 		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )

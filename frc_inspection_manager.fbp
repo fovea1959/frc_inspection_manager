@@ -338,7 +338,7 @@
                                             <property name="row_label_values"></property>
                                             <property name="row_label_vert_alignment">wxALIGN_CENTER</property>
                                             <property name="row_sizes"></property>
-                                            <property name="rows">1</property>
+                                            <property name="rows">0</property>
                                             <property name="show">1</property>
                                             <property name="size"></property>
                                             <property name="subclass">; ; forward_declare</property>
@@ -352,7 +352,7 @@
                                         </object>
                                     </object>
                                 </object>
-                                <object class="wxMenu" expanded="0">
+                                <object class="wxMenu" expanded="1">
                                     <property name="label">MyMenu</property>
                                     <property name="name">inspector_popup_menu</property>
                                     <property name="permission">protected</property>
@@ -378,38 +378,24 @@
                                         <property name="checked">0</property>
                                         <property name="enabled">1</property>
                                         <property name="help"></property>
-                                        <property name="id">ID_I_PIT</property>
-                                        <property name="kind">wxITEM_NORMAL</property>
-                                        <property name="label">Send to &amp;pit for inspection</property>
-                                        <property name="name">m_i_pit</property>
-                                        <property name="permission">none</property>
-                                        <property name="shortcut"></property>
-                                        <property name="unchecked_bitmap"></property>
-                                        <event name="OnMenuSelection">on_i_context</event>
-                                    </object>
-                                    <object class="wxMenuItem" expanded="0">
-                                        <property name="bitmap"></property>
-                                        <property name="checked">0</property>
-                                        <property name="enabled">1</property>
-                                        <property name="help"></property>
-                                        <property name="id">ID_I_PIT_RETURN</property>
-                                        <property name="kind">wxITEM_NORMAL</property>
-                                        <property name="label">Pit &amp;return</property>
-                                        <property name="name">m_i_pit_return</property>
-                                        <property name="permission">none</property>
-                                        <property name="shortcut"></property>
-                                        <property name="unchecked_bitmap"></property>
-                                        <event name="OnMenuSelection">on_i_context</event>
-                                    </object>
-                                    <object class="wxMenuItem" expanded="0">
-                                        <property name="bitmap"></property>
-                                        <property name="checked">0</property>
-                                        <property name="enabled">1</property>
-                                        <property name="help"></property>
                                         <property name="id">ID_I_AVAILABLE</property>
                                         <property name="kind">wxITEM_NORMAL</property>
                                         <property name="label">&amp;Available</property>
                                         <property name="name">m_i_available</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="0">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_PIT</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Send to &amp;pit for inspection</property>
+                                        <property name="name">m_i_pit</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>
@@ -452,6 +438,24 @@
                                         <property name="kind">wxITEM_NORMAL</property>
                                         <property name="label">&amp;Off</property>
                                         <property name="name">m_i_off</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_i_context</event>
+                                    </object>
+                                    <object class="separator" expanded="1">
+                                        <property name="name">m_separator31</property>
+                                        <property name="permission">none</property>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="0">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_I_PIT_RETURN</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Pit &amp;return</property>
+                                        <property name="name">m_i_pit_return</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>
@@ -597,7 +601,7 @@
                                             <property name="row_label_values"></property>
                                             <property name="row_label_vert_alignment">wxALIGN_CENTER</property>
                                             <property name="row_sizes"></property>
-                                            <property name="rows">1</property>
+                                            <property name="rows">0</property>
                                             <property name="show">1</property>
                                             <property name="size"></property>
                                             <property name="subclass">; ; forward_declare</property>

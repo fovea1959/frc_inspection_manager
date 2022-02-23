@@ -28,26 +28,50 @@ class Inspection:
 
 class TeamStatus(Enum):
     Absent = auto()
+    CheckedIn = auto()
     Weighed = auto()
     Partial = auto()
     Inspected = auto()
+    Final_Incomplete = auto()
     Final_Completed = auto()
 
 
 class Team:
     def __init__(self):
-        self.team_number = None
-        self.team_name = None
-        self.team_status = TeamStatus.Absent
+        self.number = None
+        self.name = None
+        self.checked_in = False;
         self.inspections = []
         self.inspector_in_pit = None        # inspector.id
 
     def __str__(self):
-        return "Team " + str(self.team_number)
+        return "Team " + str(self.number)
 
     @property
     def team_status_s(self):
-        return str(self.team_status).rpartition('.')[2]
+        return str(self.status).rpartition('.')[2]
+
+    @property
+    def status(self):
+        possible_status = set((TeamStatus.Absent,))
+        if self.checked_in:
+            possible_status.add(TeamStatus.CheckedIn)
+        for inspection in self.inspections:
+            if inspection.robot_weight is not None:
+                possible_status.add(TeamStatus.Weighed)
+            if inspection.success:
+                possible_status.add(TeamStatus.Inspected)
+            if inspection.inspection_reason == InspectionReason.Final:
+                if inspection.success:
+                    possible_status.add(TeamStatus.Final_Completed)
+                else:
+                    possible_status.add(TeamStatus.Final_Incomplete)
+        print('1: ', possible_status)
+        most_positive_status_value = sorted(list(possible_status), key=lambda r: r.value)[-1]
+        print('2: ', most_positive_status_value)
+        most_positive_status = TeamStatus(most_positive_status_value)
+        print('3: ', most_positive_status)
+        return most_positive_status
 
 
 class InspectorStatus(Enum):
@@ -64,8 +88,7 @@ class Inspector:
         self.name = None
         self.status = InspectorStatus.Off
         self.inspection_team_number = None # team number
-        self.inspection_started = None
-        self.break_started = None
+        self.time_away_started = None
 
     def __str__(self):
         return self.name
@@ -103,7 +126,7 @@ class Database:
     def make_indices(self):
         self.team_map.clear()
         for t in self.teams:
-            self.team_map[t.team_number] = t
+            self.team_map[t.number] = t
         self.inspector_map.clear()
         for i in self.inspectors:
             self.inspector_map[i.id] = i
@@ -122,7 +145,7 @@ class Database:
 
     def from_json(self, j):
         save_data = jsonpickle.decode(j)
-        self.teams = sorted(save_data.teams, key=lambda t: t.team_number)
+        self.teams = sorted(save_data.teams, key=lambda t: t.number)
         self.inspectors = save_data.inspectors
         self.make_indices()
         self.dirty = False
@@ -131,9 +154,9 @@ def dummy_team_list():
     teams = []
     for i in range(1, 41):
         team = Team()
-        team.team_number = (i * 100) + random.randint(1, 99)
-        team.team_name = "Team " + str(team.team_number)
-        team.team_status = TeamStatus.Absent
+        team.number = (i * 100) + random.randint(1, 99)
+        team.name = "Team " + str(team.number)
+        team.status = TeamStatus.Absent
         teams.append(team)
     return teams
 
@@ -163,8 +186,8 @@ def database_from_tba(fn):
         tba = json.load(fp)
     for tba1 in tba:
         team = Team()
-        team.team_number = tba1['team_number']
-        team.team_name = tba1['nickname']
+        team.number = tba1['team_number']
+        team.name = tba1['nickname']
         database.teams.append(team)
     database.make_indices()
     return database

@@ -22,12 +22,12 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.grid_table = self.team_grid.GetTable()
         self.team_grid.ClearGrid()
-        self.team_grid.AppendRows(len(database.teams)-1)
+        self.team_grid.AppendRows(len(database.teams))
 
         self.team_to_row_map = {}
         self.row_to_team_map = {}
         for i, t in enumerate(self.database.teams):
-            self.team_to_row_map[t.team_number] = i
+            self.team_to_row_map[t.number] = i
             self.row_to_team_map[i] = t
             self.update_team(t)
 
@@ -41,7 +41,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.inspector_table = self.inspector_grid.GetTable()
         self.inspector_grid.ClearGrid()
-        self.inspector_grid.AppendRows(len(database.inspectors)-1)
+        self.inspector_grid.AppendRows(len(database.inspectors))
 
         self.inspector_to_row_map = {}
         self.row_to_inspector_map = {}
@@ -61,10 +61,10 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.status_frame = status_frame
 
     def update_team(self, t: Team):
-        row = self.team_to_row_map[t.team_number]
+        row = self.team_to_row_map[t.number]
 
-        self.team_grid.SetRowLabelValue(row, str(t.team_number))
-        self.team_grid.SetCellValue(row, 0, t.team_name)
+        self.team_grid.SetRowLabelValue(row, str(t.number))
+        self.team_grid.SetCellValue(row, 0, t.name)
         s = t.team_status_s
         if t.inspector_in_pit is not None:
             inspector = self.database.fetch_inspector(t.inspector_in_pit)
@@ -79,7 +79,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.inspector_grid.SetRowLabelValue(row, inspector.name)
         self.inspector_grid.SetCellValue(row, 0, inspector.status_s)
         self.inspector_grid.SetCellAlignment(row, 0, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
-        s = str(inspector.inspection_started) if inspector.inspection_started is not None else ""
+        s = str(inspector.time_away_started) if inspector.time_away_started is not None else ""
         self.inspector_grid.SetCellValue(row, 1, s)
         self.update_inspector_out_timer(inspector)
         self.inspector_grid.AutoSize()
@@ -87,8 +87,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def update_inspector_out_timer(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
         s = ""
-        if inspector.inspection_started is not None:
-            out_time = datetime.datetime.now() - inspector.inspection_started
+        if inspector.time_away_started is not None:
+            out_time = datetime.datetime.now() - inspector.time_away_started
             s = str(out_time)
         self.inspector_grid.SetCellValue(row, 2, s)
 
@@ -105,7 +105,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         event.Skip()
 
     def display_team_context_menu(self, event, team):
-        self.m_t_team.SetItemLabel(str(team.team_number))
+        self.m_t_team.SetItemLabel(str(team.number))
         self.team_for_context_menu = team
         self.team_panelOnContextMenu(event)
 
@@ -114,7 +114,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         id = event.GetId()
         team = self.team_for_context_menu
         if id == frc_inspection_manager_wx.ID_T_WEIGHIN:
-            team.team_status = TeamStatus.Weighed
+            team.status = TeamStatus.Weighed
         else:
             self.SetStatusText("Got funny command!")
 
@@ -132,6 +132,30 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def display_inspector_context_menu(self, event, inspector):
         self.m_i_inspector.SetItemLabel(inspector.name)
         self.inspector_for_context_menu = inspector
+
+        enable_all = [
+            self.m_i_off, self.m_i_pit, self.m_i_field, self.m_i_pit_return, self.m_i_available, self.m_i_break
+        ]
+        enable = enable_all.copy()
+        enable.remove(self.m_i_pit_return)
+        if inspector.status == InspectorStatus.Off:
+            enable.remove(self.m_i_off)
+        elif inspector.status == InspectorStatus.Pit:
+            enable = [self.m_i_pit_return]
+        elif inspector.status == InspectorStatus.Field:
+            enable.remove(self.m_i_field)
+        elif inspector.status == InspectorStatus.Break:
+            enable.remove(self.m_i_break)
+        elif inspector.status == InspectorStatus.Available:
+            enable.remove(self.m_i_available)
+        else:
+            raise Exception("unknown inspector status")
+
+        for menuitem in enable_all:
+            menuitem.Enable(False)
+        for menuitem in enable:
+            menuitem.Enable(True)
+
         self.inspector_panelOnContextMenu(event)
 
     def on_i_context(self, event: wx._core.CommandEvent):
@@ -173,11 +197,11 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def inspection_start_dialog_box(self, inspector: Inspector = None, team: Team = None):
         choices = None
         if team is None:
-            choices = [str(t.team_number) for t in self.database.teams]
+            choices = [str(t.number) for t in self.database.teams]
             prompt = "Which team is " + inspector.name + " + inspecting?"
         elif inspector is None:
             choices = [ i.name for i in self.database.inspectors]
-            prompt = "Which inspector is going to team " + str(team.team_number) + ", " + team.team_name
+            prompt = "Which inspector is going to team " + str(team.number) + ", " + team.name
 
         if choices is not None:
             dlg = wx.SingleChoiceDialog(self, prompt, "Start Inspection", choices, wx.CHOICEDLG_STYLE)
@@ -189,8 +213,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                     team = self.database.teams[i]
 
                 inspector.status = InspectorStatus.Pit
-                inspector.inspection_team_number = team.team_number
-                inspector.inspection_started = datetime.datetime.now()
+                inspector.inspection_team_number = team.number
+                inspector.time_away_started = datetime.datetime.now()
                 team.inspector_in_pit = inspector.id
 
                 self.update_team(team)
@@ -233,7 +257,7 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
         s = wx.GridSizer(8, 8, 2, 2)
         for t in self.database.teams:
             p = frc_inspection_manager_wx.TeamStatusPanel(self)
-            self.team_to_gui_map[t.team_number] = p
+            self.team_to_gui_map[t.number] = p
             self.update_team(t)
             s.Add(p, 1, wx.EXPAND | wx.ALL, 2)
         s.SetSizeHints(self)
@@ -244,8 +268,8 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
         self.main_frame = main_frame
 
     def update_team(self, t: Team):
-        p = self.team_to_gui_map[t.team_number]
-        p.team_number.SetLabel(str(t.team_number))
+        p = self.team_to_gui_map[t.number]
+        p.team_number.SetLabel(str(t.number))
         s = t.team_status_s
         if t.inspector_in_pit is not None:
             s += "; inspector in pit"
