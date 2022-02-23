@@ -40,10 +40,12 @@ class Team:
         self.team_name = None
         self.team_status = TeamStatus.Absent
         self.inspections = []
+        self.inspector_in_pit = None        # inspector.id
 
     def __str__(self):
         return "Team " + str(self.team_number)
 
+    @property
     def team_status_s(self):
         return str(self.team_status).rpartition('.')[2]
 
@@ -61,15 +63,19 @@ class Inspector:
         self.id = uuid.uuid4()
         self.name = None
         self.status = InspectorStatus.Off
-        self.inspection_team = None
+        self.inspection_team_number = None # team number
         self.inspection_started = None
         self.break_started = None
 
     def __str__(self):
         return self.name
 
+    @property
     def status_s(self):
-        return str(self.status).rpartition('.')[2]
+        s = str(self.status).rpartition('.')[2]
+        if self.inspection_team_number is not None:
+            s += f" {self.inspection_team_number}"
+        return s
 
 
 class SaveData:
@@ -87,6 +93,7 @@ class Database:
     def __str__(self):
         return f"Database, {len(self.teams)} teams, {len(self.inspectors)} inspectors"
 
+    @property
     def is_dirty(self):
         return self.dirty
 
@@ -161,7 +168,6 @@ def database_from_tba(fn):
         database.teams.append(team)
     database.make_indices()
     return database
-
 
 
 if __name__ == '__main__':

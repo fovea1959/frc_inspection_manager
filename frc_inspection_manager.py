@@ -50,8 +50,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             self.row_to_inspector_map[i] = inspector
             self.update_inspector(inspector)
 
-        self.inspector_grid.SetColLabelValue(0, 'uuid')
-        self.inspector_grid.SetColLabelValue(1, 'status')
+        self.inspector_grid.SetColLabelValue(0, 'status')
+        self.inspector_grid.SetColLabelValue(1, 'when left')
         # self.inspector_grid.SetColLabelAlignment(wx.ALIGN_CENTER, wx.ALIGN_CENTER)
         self.inspector_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
         self.inspector_grid.AutoSize()
@@ -65,16 +65,37 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.team_grid.SetRowLabelValue(row, str(t.team_number))
         self.team_grid.SetCellValue(row, 0, t.team_name)
-        self.team_grid.SetCellValue(row, 1, t.team_status_s())
+        s = t.team_status_s
+        if t.inspector_in_pit is not None:
+            inspector = self.database.fetch_inspector(t.inspector_in_pit)
+            s += "; " + inspector.name + " in pit"
+        self.team_grid.SetCellValue(row, 1, s)
         self.team_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
+        self.team_grid.AutoSize()
 
     def update_inspector(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
 
         self.inspector_grid.SetRowLabelValue(row, inspector.name)
-        self.inspector_grid.SetCellValue(row, 0, str(inspector.id))
-        self.inspector_grid.SetCellValue(row, 1, inspector.status_s())
-        self.inspector_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
+        self.inspector_grid.SetCellValue(row, 0, inspector.status_s)
+        self.inspector_grid.SetCellAlignment(row, 0, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
+        s = str(inspector.inspection_started) if inspector.inspection_started is not None else ""
+        self.inspector_grid.SetCellValue(row, 1, s)
+        self.update_inspector_out_timer(inspector)
+        self.inspector_grid.AutoSize()
+
+    def update_inspector_out_timer(self, inspector: Inspector):
+        row = self.inspector_to_row_map[inspector.id]
+        s = ""
+        if inspector.inspection_started is not None:
+            out_time = datetime.datetime.now() - inspector.inspection_started
+            s = str(out_time)
+        self.inspector_grid.SetCellValue(row, 2, s)
+
+
+    def on_timer(self, event):
+        for inspector in self.row_to_inspector_map.values():
+            self.update_inspector_out_timer(inspector)
 
     def on_team_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
@@ -115,28 +136,71 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def on_i_context(self, event: wx._core.CommandEvent):
         print(type(event), event.GetId(), self.inspector_for_context_menu)
-        id = event.GetId()
+        event_id = event.GetId()
         inspector = self.inspector_for_context_menu
+        current_status = inspector.status
 
-        if id == frc_inspection_manager_wx.ID_I_PIT:
-            inspector.status = InspectorStatus.Pit
-        elif id == frc_inspection_manager_wx.ID_I_FIELD:
-            inspector.status = InspectorStatus.Field
-        elif id == frc_inspection_manager_wx.ID_I_BREAK:
-            inspector.status = InspectorStatus.Break
-        elif id == frc_inspection_manager_wx.ID_I_AVAILABLE:
-            inspector.status = InspectorStatus.Available
-        elif id == frc_inspection_manager_wx.ID_I_OFF:
-            inspector.status = InspectorStatus.Off
-        elif id == frc_inspection_manager_wx.ID_I_PIT_RETURN:
+        need_an_inspection_result = False
+
+        if inspector.status == frc_inspection_manager_wx.ID_I_PIT:
+            need_an_inspection_result = True
+            # put dialog box up here, then exit
+
+        new_status = None
+        if event_id == frc_inspection_manager_wx.ID_I_PIT:
+            # this will take care of setting the new status
+            self.inspection_start_dialog_box(inspector=inspector)
+        elif event_id == frc_inspection_manager_wx.ID_I_FIELD:
+            new_status = InspectorStatus.Field
+        elif event_id == frc_inspection_manager_wx.ID_I_BREAK:
+            new_status = InspectorStatus.Break
+        elif event_id == frc_inspection_manager_wx.ID_I_AVAILABLE:
+            new_status = InspectorStatus.Available
+        elif event_id == frc_inspection_manager_wx.ID_I_OFF:
+            new_status = InspectorStatus.Off
+        elif event_id == frc_inspection_manager_wx.ID_I_PIT_RETURN:
             # TODO need to record inspection result!
-            inspector.status = InspectorStatus.Available
+            new_status = InspectorStatus.Available
         else:
             self.SetStatusText("Got funny command!")
 
-        self.database.mark_dirty()
-        self.update_inspector(inspector)
+        if new_status != None:
+            if new_status != current_status:
+                inspector.status = new_status
+                self.database.mark_dirty()
+                self.update_inspector(inspector)
 
+    def inspection_start_dialog_box(self, inspector: Inspector = None, team: Team = None):
+        choices = None
+        if team is None:
+            choices = [str(t.team_number) for t in self.database.teams]
+            prompt = "Which team is " + inspector.name + " + inspecting?"
+        elif inspector is None:
+            choices = [ i.name for i in self.database.inspectors]
+            prompt = "Which inspector is going to team " + str(team.team_number) + ", " + team.team_name
+
+        if choices is not None:
+            dlg = wx.SingleChoiceDialog(self, prompt, "Start Inspection", choices, wx.CHOICEDLG_STYLE)
+            if dlg.ShowModal() == wx.ID_OK:
+                i = dlg.GetSelection()
+                if inspector is None:
+                    inspector = self.database.inspectors[i]
+                else:
+                    team = self.database.teams[i]
+
+                inspector.status = InspectorStatus.Pit
+                inspector.inspection_team_number = team.team_number
+                inspector.inspection_started = datetime.datetime.now()
+                team.inspector_in_pit = inspector.id
+
+                self.update_team(team)
+                self.status_frame.update_team(team)
+                self.update_inspector(inspector)
+
+                self.database.mark_dirty()
+            dlg.Destroy()
+
+        return True
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
@@ -182,7 +246,10 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     def update_team(self, t: Team):
         p = self.team_to_gui_map[t.team_number]
         p.team_number.SetLabel(str(t.team_number))
-        p.team_status.SetLabel(t.team_status_s())
+        s = t.team_status_s
+        if t.inspector_in_pit is not None:
+            s += "; inspector in pit"
+        p.team_status.SetLabel(s)
 
     """
     really not needed; no close button!
@@ -214,13 +281,13 @@ if __name__ == '__main__':
 
     app.MainLoop()
 
-    if database.is_dirty():
+    if database.is_dirty:
         j = database.as_json()
         with open(fn + '.tmp', 'w') as fp:
             fp.write(j)
 
         if os.path.isfile(fn):
             ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            os.rename (fn, fn + '_' + ts)
+            os.rename(fn, fn + '_' + ts)
 
         os.rename(fn + '.tmp', fn)

@@ -11,13 +11,13 @@ import wx
 import wx.xrc
 import wx.grid
 
-ID_T_WEIGHIN = 1000
-ID_I_PIT = 1001
-ID_I_PIT_RETURN = 1002
-ID_I_AVAILABLE = 1003
-ID_I_FIELD = 1004
-ID_I_BREAK = 1005
-ID_I_OFF = 1006
+ID_I_PIT = 1000
+ID_I_PIT_RETURN = 1001
+ID_I_AVAILABLE = 1002
+ID_I_FIELD = 1003
+ID_I_BREAK = 1004
+ID_I_OFF = 1005
+ID_T_WEIGHIN = 1006
 
 ###########################################################################
 ## Class MainFrame
@@ -49,58 +49,13 @@ class MainFrame ( wx.Frame ):
 		bSizer11 = wx.BoxSizer( wx.VERTICAL )
 
 		self.m_notebook1 = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.team_panel = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		bSizer1 = wx.BoxSizer( wx.VERTICAL )
-
-		self.team_grid = wx.grid.Grid( self.team_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
-
-		# Grid
-		self.team_grid.CreateGrid( 1, 2 )
-		self.team_grid.EnableEditing( False )
-		self.team_grid.EnableGridLines( True )
-		self.team_grid.EnableDragGridSize( False )
-		self.team_grid.SetMargins( 0, 0 )
-
-		# Columns
-		self.team_grid.EnableDragColMove( False )
-		self.team_grid.EnableDragColSize( True )
-		self.team_grid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
-
-		# Rows
-		self.team_grid.EnableDragRowSize( True )
-		self.team_grid.SetRowLabelSize( wx.grid.GRID_AUTOSIZE )
-		self.team_grid.SetRowLabelAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTER )
-
-		# Label Appearance
-
-		# Cell Defaults
-		self.team_grid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
-		bSizer1.Add( self.team_grid, 0, wx.ALL|wx.EXPAND, 5 )
-
-
-		self.team_panel.SetSizer( bSizer1 )
-		self.team_panel.Layout()
-		bSizer1.Fit( self.team_panel )
-		self.team_popup_menu = wx.Menu()
-		self.m_t_team = wx.MenuItem( self.team_popup_menu, wx.ID_ANY, u"team #", wx.EmptyString, wx.ITEM_NORMAL )
-		self.team_popup_menu.Append( self.m_t_team )
-		self.m_t_team.Enable( False )
-
-		self.team_popup_menu.AppendSeparator()
-
-		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weighin", wx.EmptyString, wx.ITEM_NORMAL )
-		self.team_popup_menu.Append( self.m_t_weighin )
-
-		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
-
-		self.m_notebook1.AddPage( self.team_panel, u"Teams", True )
 		self.inspector_panel = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer2 = wx.BoxSizer( wx.VERTICAL )
 
 		self.inspector_grid = wx.grid.Grid( self.inspector_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		# Grid
-		self.inspector_grid.CreateGrid( 1, 2 )
+		self.inspector_grid.CreateGrid( 1, 3 )
 		self.inspector_grid.EnableEditing( False )
 		self.inspector_grid.EnableGridLines( True )
 		self.inspector_grid.EnableDragGridSize( False )
@@ -153,21 +108,67 @@ class MainFrame ( wx.Frame ):
 
 		self.inspector_panel.Bind( wx.EVT_RIGHT_DOWN, self.inspector_panelOnContextMenu )
 
-		self.m_notebook1.AddPage( self.inspector_panel, u"Inspectors", False )
+		self.m_notebook1.AddPage( self.inspector_panel, u"Inspectors", True )
+		self.team_panel = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		bSizer1 = wx.BoxSizer( wx.VERTICAL )
+
+		self.team_grid = wx.grid.Grid( self.team_panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+
+		# Grid
+		self.team_grid.CreateGrid( 1, 2 )
+		self.team_grid.EnableEditing( False )
+		self.team_grid.EnableGridLines( True )
+		self.team_grid.EnableDragGridSize( False )
+		self.team_grid.SetMargins( 0, 0 )
+
+		# Columns
+		self.team_grid.EnableDragColMove( False )
+		self.team_grid.EnableDragColSize( True )
+		self.team_grid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
+
+		# Rows
+		self.team_grid.EnableDragRowSize( True )
+		self.team_grid.SetRowLabelSize( wx.grid.GRID_AUTOSIZE )
+		self.team_grid.SetRowLabelAlignment( wx.ALIGN_RIGHT, wx.ALIGN_CENTER )
+
+		# Label Appearance
+
+		# Cell Defaults
+		self.team_grid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
+		bSizer1.Add( self.team_grid, 0, wx.ALL|wx.EXPAND, 5 )
+
+
+		self.team_panel.SetSizer( bSizer1 )
+		self.team_panel.Layout()
+		bSizer1.Fit( self.team_panel )
+		self.team_popup_menu = wx.Menu()
+		self.m_t_team = wx.MenuItem( self.team_popup_menu, wx.ID_ANY, u"team #", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_team )
+		self.m_t_team.Enable( False )
+
+		self.team_popup_menu.AppendSeparator()
+
+		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weighin", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_weighin )
+
+		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
+
+		self.m_notebook1.AddPage( self.team_panel, u"Teams", False )
 
 		bSizer11.Add( self.m_notebook1, 1, wx.EXPAND |wx.ALL, 5 )
 
 
 		self.SetSizer( bSizer11 )
 		self.Layout()
+		self.m_timer1 = wx.Timer()
+		self.m_timer1.SetOwner( self, wx.ID_ANY )
+		self.m_timer1.Start( 1000 )
+
 
 		self.Centre( wx.BOTH )
 
 		# Connect Events
 		self.Bind( wx.EVT_CLOSE, self.my_on_close )
-		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
-		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
-		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_inspector_right_click )
 		self.inspector_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_inspector_right_click )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_pit.GetId() )
@@ -176,6 +177,10 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_field.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_break.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_i_context, id = self.m_i_off.GetId() )
+		self.team_grid.Bind( wx.grid.EVT_GRID_CELL_RIGHT_CLICK, self.on_team_right_click )
+		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
+		self.Bind( wx.EVT_TIMER, self.on_timer, id=wx.ID_ANY )
 
 	def __del__( self ):
 		pass
@@ -183,13 +188,6 @@ class MainFrame ( wx.Frame ):
 
 	# Virtual event handlers, override them in your derived class
 	def my_on_close( self, event ):
-		pass
-
-	def on_team_right_click( self, event ):
-		pass
-
-
-	def on_t_context( self, event ):
 		pass
 
 	def on_inspector_right_click( self, event ):
@@ -204,11 +202,21 @@ class MainFrame ( wx.Frame ):
 
 
 
-	def team_panelOnContextMenu( self, event ):
-		self.team_panel.PopupMenu( self.team_popup_menu, event.GetPosition() )
+	def on_team_right_click( self, event ):
+		pass
+
+
+	def on_t_context( self, event ):
+		pass
+
+	def on_timer( self, event ):
+		pass
 
 	def inspector_panelOnContextMenu( self, event ):
 		self.inspector_panel.PopupMenu( self.inspector_popup_menu, event.GetPosition() )
+
+	def team_panelOnContextMenu( self, event ):
+		self.team_panel.PopupMenu( self.team_popup_menu, event.GetPosition() )
 
 
 ###########################################################################
