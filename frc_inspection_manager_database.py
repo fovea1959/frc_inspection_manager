@@ -23,6 +23,7 @@ class Inspection:
         self.robot_weight_with_red = None
         self.robot_weight_with_blue = None
         self.inspection_reason: InspectionReason = None
+        self.comments = None
         self.success = False
 
 
@@ -85,7 +86,7 @@ class Inspector:
         self.id = uuid.uuid4()
         self.name = None
         self.status = InspectorStatus.Off
-        self.inspection_team_number = None # team number
+        self.inspection_team_number = None  # team number
         self.time_away_started = None
 
     def __str__(self):
@@ -141,12 +142,13 @@ class Database:
         save_data.inspectors = self.inspectors
         return jsonpickle.encode(save_data, keys=True, indent=1)
 
-    def from_json(self, j):
-        save_data = jsonpickle.decode(j)
+    def from_json(self, json_string):
+        save_data = jsonpickle.decode(json_string)
         self.teams = sorted(save_data.teams, key=lambda t: t.number)
         self.inspectors = save_data.inspectors
         self.make_indices()
         self.dirty = False
+
 
 def dummy_team_list():
     teams = []
@@ -154,7 +156,6 @@ def dummy_team_list():
         team = Team()
         team.number = (i * 100) + random.randint(1, 99)
         team.name = "Team " + str(team.number)
-        team.status = TeamStatus.Absent
         teams.append(team)
     return teams
 
@@ -178,10 +179,11 @@ def dummy_database():
     database.make_indices()
     return database
 
+
 def database_from_tba(fn):
     database = Database()
-    with open(fn) as fp:
-        tba = json.load(fp)
+    with open(fn) as tba_fp:
+        tba = json.load(tba_fp)
     for tba1 in tba:
         team = Team()
         team.number = tba1['team_number']

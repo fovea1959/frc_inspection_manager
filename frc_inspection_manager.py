@@ -121,6 +121,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             team.checked_in = not team.checked_in
         elif event_id == frc_inspection_manager_wx.ID_T_WEIGHIN:
             weighed_in = self.weighin_dialog_box()
+            return
         else:
             self.SetStatusText("Got funny command!")
 
@@ -202,8 +203,10 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             choices = [str(t.number) for t in self.database.teams]
             prompt = "Which team is " + inspector.name + " + inspecting?"
         elif inspector is None:
-            choices = [ i.name for i in self.database.inspectors]
+            choices = [i.name for i in self.database.inspectors]
             prompt = "Which inspector is going to team " + str(team.number) + ", " + team.name
+        else:
+            prompt = "huh, programmer should have filled in either team or inspector"
 
         inspection_started = False
         if choices is not None:
@@ -231,19 +234,15 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def weighin_dialog_box(self):
         team = self.team_for_context_menu
-        with WeighinDialog(self, self.database) as dlg:
+        weighin = Inspection()
+        with InspectionDialog(self, weighin, self.database) as dlg:
             #dlg.text_ctrl_1.SetValue(self.text_ctrl_1.GetValue())
             # show as modal dialog
             result = dlg.ShowModal()
             print(f"weighin dialog box {result}")
             if result == wx.ID_OK:
                 # user has hit OK -> read text control value
-                print('OK!')
-
-                # need to record weigh information
-                weighin = Inspection()
-                weighin.robot_weight = 100.1
-                weighin.inspection_reason = InspectionReason.Weighin
+                print('OK!', vars(weighin))
 
                 team.inspections.append(weighin)
 
@@ -251,7 +250,6 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
                 self.update_team(team)
                 self.status_frame.update_team(team)
-
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
@@ -302,22 +300,128 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
             s += "; inspector in pit"
         p.team_status.SetLabel(s)
 
-    """
-    really not needed; no close button!
-    """
     def my_on_close(self, event):
+        """
+        really not needed; no close button!
+        """
         if event.CanVeto():
             event.Veto()
         else:
             event.Skip()
 
 
-class WeighinDialog(frc_inspection_manager_wx.WeighinDialog):
-    def __init__(self, parent, database):
+class InspectorValidator(wx.Validator):
+    def __init__(self, data=None, key=None, inspectors=None, current_inspector=None):
+        super().__init__()
+        if data is None:
+            raise Exception("must specify data=")
+        if key is None:
+            raise Exception("must specify key=")
+        if inspectors is None:
+            raise Exception("must specify inspectors=")
+        self.data = data
+        self.key = key
+        self.inspectors = inspectors
+        self.current_inspector = current_inspector
+
+    def Clone(self):
+        return InspectorValidator(data=self.data, key=self.key, inspectors=self.inspectors, current_inspector=self.current_inspector)
+
+    def Validate(self, win):
+        return True
+
+    def TransferToWindow(self):
+        inspector_choice: wx.Choice = self.GetWindow()
+
+        inspector_list = []
+        inspector_choice.Clear()
+
+        inspector_index = 0
+        inspector_choice.Append('-- none --')
+        inspector_list.append(None)
+
+        for i, inspector in enumerate(self.inspectors):
+            inspector_choice.Append(inspector.name)
+            inspector_list.append(inspector)
+            if self.current_inspector is not None:
+                if inspector.inspector_id == self.current_inspector.id:
+                    inspector_index = i + 1
+        inspector_choice.SetSelection(inspector_index)
+
+        return True
+
+    def TransferFromWindow(self):
+        choice: wx.Choice = self.GetWindow()
+        selection_index = choice.GetSelection()
+        print('selection', selection_index, self.inspectors)
+        if selection_index == 0:
+            inspector_id = None
+        else:
+            inspector = self.inspectors[selection_index-1]
+            print('inspector choice', inspector)
+            inspector_id = inspector.id
+        setattr(self.data, self.key, inspector_id)
+        return True
+
+
+class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
+    def __init__(self, parent, inspection, db):
         # initialize parent class
         super().__init__(parent)
 
-        self.database = database
+        self.inspection = inspection
+        self.database = db
+
+        self.robot_weight.SetValidator(WeightValidator(data=self.inspection, key='robot_weight', must_have_value=False))
+        self.red_bumper_weight.SetValidator(WeightValidator(data=self.inspection, key='red_bumper_weight', must_have_value=False))
+        self.blue_bumper_weight.SetValidator(WeightValidator(data=self.inspection, key='blue_bumper_weight', must_have_value=False))
+        self.robot_weight_with_red.SetValidator(WeightValidator(data=self.inspection, key='robot_weight_with_red', must_have_value=False))
+        self.robot_weight_with_blue.SetValidator(WeightValidator(data=self.inspection, key='robot_weight_with_blue', must_have_value=False))
+        self.inspector.SetValidator(InspectorValidator(data=self.inspection, key='inspector_id', inspectors=self.database.inspectors))
+
+        if inspection.inspection_reason == InspectionReason.Weighin:
+            self.robot_weight.GetValidator().must_have_value = True
+            self.enable_robot_weight_with_red(False)
+            self.enable_robot_weight_with_blue(False)
+            self.enable_passed(False)
+        elif inspection.inspection_reason == InspectionReason.Initial:
+            self.enable_robot_weight(False)
+            self.enable_red_bumper_weight(False)
+            self.enable_blue_bumper_weight(False)
+            self.enable_robot_weight_with_red(False)
+            self.enable_robot_weight_with_blue(False)
+        elif inspection.inspection_reason == InspectionReason.Reinspect:
+            pass
+        elif inspection.inspection_reason == InspectionReason.Final:
+            pass
+
+    def enable_robot_weight(self, enabled):
+        self.robot_weight_label.Enable(enabled)
+        self.robot_weight.Enable(enabled)
+
+    def enable_red_bumper_weight(self, enabled):
+        self.red_bumper_label.Enable(enabled)
+        self.red_bumper.Enable(enabled)
+
+    def enable_blue_bumper_weight(self, enabled):
+        self.blue_bumper_label.Enable(enabled)
+        self.blue_bumper.Enable(enabled)
+
+    def enable_robot_weight_with_red(self, enabled):
+        self.robot_weight_with_red_label.Enable(enabled)
+        self.robot_weight_with_red.Enable(enabled)
+
+    def enable_robot_weight_with_blue(self, enabled):
+        self.robot_weight_with_blue_label.Enable(enabled)
+        self.robot_weight_with_blue.Enable(enabled)
+
+    def enable_inspector(self, enabled):
+        self.inspector_label.Enable(enabled)
+        self.inspector.Enable(enabled)
+
+    def enable_passed(self, enabled):
+        self.passed_label.Enable(False)
+        self.passed.Enable(False)
 
     def on_OK_button(self, event):
         print("Event handler 'on_button_OK' called")
@@ -328,6 +432,60 @@ class WeighinDialog(frc_inspection_manager_wx.WeighinDialog):
         else:
             print("Checkbox checked -> close the dialog")
             event.Skip()
+
+
+class WeightValidator(wx.Validator):
+    def __init__(self, must_have_value=False, data=None, key=None):
+        super().__init__()
+        if data is None:
+            raise Exception("must specify data=")
+        if key is None:
+            raise Exception("must specify key=")
+        self.must_have_value = must_have_value
+        self.data = data
+        self.key = key
+        self.value = None
+
+    def Clone(self):
+        return WeightValidator(must_have_value=self.must_have_value, data=self.data, key=self.key)
+
+    def Validate(self, win):
+        textCtrl = self.GetWindow()
+        text = textCtrl.GetValue().strip()
+        ok = True
+        self.value = None
+        if len(text) > 0:
+            try:
+                self.value = float(text)
+            except ValueError:
+                pass
+
+        if self.value is None and self.must_have_value:
+            # wx.MessageBox("This field must contain some text!", "Error")
+            ok = False
+
+        if ok:
+            textCtrl.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
+            textCtrl.Refresh()
+        else:
+            textCtrl.SetBackgroundColour("pink")
+            textCtrl.SetFocus()
+            textCtrl.Refresh()
+
+        return ok
+
+    def TransferToWindow(self):
+        textCtrl = self.GetWindow()
+        self.value = getattr(self.data, self.key)
+        if self.value is None:
+            textCtrl.SetValue('')
+        else:
+            textCtrl.SetValue(str(self.value))
+        return True
+
+    def TransferFromWindow(self):
+        setattr(self.data, self.key, self.value)
+        return True
 
 
 if __name__ == '__main__':

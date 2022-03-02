@@ -229,79 +229,126 @@ class MainFrame ( wx.Frame ):
 
 
 ###########################################################################
-## Class WeighinDialog
+## Class InspectionDialog
 ###########################################################################
 
-class WeighinDialog ( wx.Dialog ):
+class InspectionDialog ( wx.Dialog ):
 
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Weighin", pos = wx.DefaultPosition, size = wx.Size( 356,200 ), style = wx.DEFAULT_DIALOG_STYLE )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 384,348 ), style = wx.DEFAULT_DIALOG_STYLE )
 
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
-		bSizer4 = wx.BoxSizer( wx.VERTICAL )
+		self.inspectionDialogSizer = wx.BoxSizer( wx.VERTICAL )
 
-		fgSizer1 = wx.FlexGridSizer( 4, 2, 0, 0 )
-		fgSizer1.AddGrowableCol( 1, 1 )
-		fgSizer1.SetFlexibleDirection( wx.HORIZONTAL )
-		fgSizer1.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		self.topSizer = wx.FlexGridSizer( 8, 2, 0, 0 )
+		self.topSizer.AddGrowableCol( 1, 1 )
+		self.topSizer.SetFlexibleDirection( wx.HORIZONTAL )
+		self.topSizer.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
-		self.m_staticText3 = wx.StaticText( self, wx.ID_ANY, u"Robot Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
-		self.m_staticText3.Wrap( -1 )
+		self.robot_weight_label = wx.StaticText( self, wx.ID_ANY, u"Robot Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.robot_weight_label.Wrap( -1 )
 
-		fgSizer1.Add( self.m_staticText3, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		self.topSizer.Add( self.robot_weight_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
 
 		self.robot_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		fgSizer1.Add( self.robot_weight, 1, wx.ALL|wx.EXPAND, 5 )
+		self.topSizer.Add( self.robot_weight, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_TOP|wx.ALL|wx.EXPAND, 5 )
 
-		self.m_staticText4 = wx.StaticText( self, wx.ID_ANY, u"Red Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
-		self.m_staticText4.Wrap( -1 )
+		self.red_bumper_weight_label = wx.StaticText( self, wx.ID_ANY, u"<span foreground='red'>Red</span> Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.red_bumper_weight_label.SetLabelMarkup( u"<span foreground='red'>Red</span> Bumper Weight" )
+		self.red_bumper_weight_label.Wrap( -1 )
 
-		fgSizer1.Add( self.m_staticText4, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		self.red_bumper_weight_label.SetForegroundColour( wx.Colour( 250, 75, 56 ) )
+
+		self.topSizer.Add( self.red_bumper_weight_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
 
 		self.red_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.red_bumper_weight.SetForegroundColour( wx.Colour( 255, 0, 0 ) )
+		self.red_bumper_weight.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 
-		fgSizer1.Add( self.red_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
+		self.topSizer.Add( self.red_bumper_weight, 0, wx.ALL|wx.EXPAND, 5 )
 
-		self.m_staticText5 = wx.StaticText( self, wx.ID_ANY, u"Blue Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
-		self.m_staticText5.Wrap( -1 )
+		self.blue_bumper_weight_label = wx.StaticText( self, wx.ID_ANY, u"<span foreground='red'>Blue</span> Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.blue_bumper_weight_label.SetLabelMarkup( u"<span foreground='red'>Blue</span> Bumper Weight" )
+		self.blue_bumper_weight_label.Wrap( -1 )
 
-		fgSizer1.Add( self.m_staticText5, 0, wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
+		self.blue_bumper_weight_label.SetForegroundColour( wx.Colour( 78, 140, 203 ) )
+
+		self.topSizer.Add( self.blue_bumper_weight_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
 
 		self.blue_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.blue_bumper_weight.SetForegroundColour( wx.Colour( 0, 0, 255 ) )
+		self.blue_bumper_weight.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 
-		fgSizer1.Add( self.blue_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
+		self.topSizer.Add( self.blue_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
 
-		self.m_staticText6 = wx.StaticText( self, wx.ID_ANY, u"Inspector", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
-		self.m_staticText6.Wrap( -1 )
+		self.robot_weight_with_red_label = wx.StaticText( self, wx.ID_ANY, u"Robot + Red Bumper Weight", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.robot_weight_with_red_label.Wrap( -1 )
 
-		fgSizer1.Add( self.m_staticText6, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
+		self.robot_weight_with_red_label.SetForegroundColour( wx.Colour( 250, 75, 56 ) )
 
-		m_choice1Choices = []
-		self.m_choice1 = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice1Choices, 0 )
-		self.m_choice1.SetSelection( 0 )
-		fgSizer1.Add( self.m_choice1, 0, wx.ALL|wx.EXPAND, 5 )
+		self.topSizer.Add( self.robot_weight_with_red_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		self.robot_weight_with_red = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.topSizer.Add( self.robot_weight_with_red, 0, wx.ALL|wx.EXPAND, 5 )
+
+		self.robot_weight_with_blue_label = wx.StaticText( self, wx.ID_ANY, u"Robot + Blue Bumper Weight", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.robot_weight_with_blue_label.Wrap( -1 )
+
+		self.robot_weight_with_blue_label.SetForegroundColour( wx.Colour( 78, 140, 203 ) )
+
+		self.topSizer.Add( self.robot_weight_with_blue_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		self.robot_weight_with_blue = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.topSizer.Add( self.robot_weight_with_blue, 0, wx.ALL|wx.EXPAND, 5 )
+
+		self.inspector_label = wx.StaticText( self, wx.ID_ANY, u"Inspector", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.inspector_label.Wrap( -1 )
+
+		self.topSizer.Add( self.inspector_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		inspectorChoices = []
+		self.inspector = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, inspectorChoices, 0 )
+		self.inspector.SetSelection( 0 )
+		self.topSizer.Add( self.inspector, 0, wx.ALL|wx.EXPAND, 5 )
+
+		self.passed_label = wx.StaticText( self, wx.ID_ANY, u"Passed Inspection", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
+		self.passed_label.Wrap( -1 )
+
+		self.topSizer.Add( self.passed_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		passedChoices = []
+		self.passed = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, passedChoices, 0 )
+		self.passed.SetSelection( 0 )
+		self.topSizer.Add( self.passed, 0, wx.ALL|wx.EXPAND, 5 )
+
+		self.comments_label = wx.StaticText( self, wx.ID_ANY, u"Comments", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.comments_label.Wrap( -1 )
+
+		self.topSizer.Add( self.comments_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
+
+		self.comments = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.topSizer.Add( self.comments, 1, wx.ALL|wx.EXPAND, 5 )
 
 
-		bSizer4.Add( fgSizer1, 1, wx.EXPAND, 5 )
+		self.inspectionDialogSizer.Add( self.topSizer, 1, wx.EXPAND, 5 )
 
-		bSizer6 = wx.BoxSizer( wx.HORIZONTAL )
+		self.m_staticline1 = wx.StaticLine( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		self.inspectionDialogSizer.Add( self.m_staticline1, 0, wx.EXPAND |wx.ALL, 5 )
+
+		buttonSizer = wx.BoxSizer( wx.HORIZONTAL )
 
 		self.ok_bottom = wx.Button( self, wx.ID_OK, u"&OK", wx.DefaultPosition, wx.DefaultSize, 0 )
 
 		self.ok_bottom.SetDefault()
-		bSizer6.Add( self.ok_bottom, 0, wx.ALL, 5 )
+		buttonSizer.Add( self.ok_bottom, 0, wx.ALL, 5 )
 
 		self.cancel_button = wx.Button( self, wx.ID_CANCEL, u"&Cancel", wx.DefaultPosition, wx.DefaultSize, 0 )
-		bSizer6.Add( self.cancel_button, 0, wx.ALL|wx.LEFT, 5 )
+		buttonSizer.Add( self.cancel_button, 0, wx.ALL|wx.LEFT, 5 )
 
 
-		bSizer4.Add( bSizer6, 1, wx.ALIGN_CENTER, 5 )
+		self.inspectionDialogSizer.Add( buttonSizer, 1, wx.ALIGN_CENTER, 5 )
 
 
-		self.SetSizer( bSizer4 )
+		self.SetSizer( self.inspectionDialogSizer )
 		self.Layout()
 
 		self.Centre( wx.BOTH )
