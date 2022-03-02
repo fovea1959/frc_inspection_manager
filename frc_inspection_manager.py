@@ -235,6 +235,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def weighin_dialog_box(self):
         team = self.team_for_context_menu
         weighin = Inspection()
+        weighin.inspection_reason = InspectionReason.Weighin
+        weighin.when = datetime.datetime.now()
         with InspectionDialog(self, weighin, self.database) as dlg:
             #dlg.text_ctrl_1.SetValue(self.text_ctrl_1.GetValue())
             # show as modal dialog
@@ -310,60 +312,6 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
             event.Skip()
 
 
-class InspectorValidator(wx.Validator):
-    def __init__(self, data=None, key=None, inspectors=None, current_inspector=None):
-        super().__init__()
-        if data is None:
-            raise Exception("must specify data=")
-        if key is None:
-            raise Exception("must specify key=")
-        if inspectors is None:
-            raise Exception("must specify inspectors=")
-        self.data = data
-        self.key = key
-        self.inspectors = inspectors
-        self.current_inspector = current_inspector
-
-    def Clone(self):
-        return InspectorValidator(data=self.data, key=self.key, inspectors=self.inspectors, current_inspector=self.current_inspector)
-
-    def Validate(self, win):
-        return True
-
-    def TransferToWindow(self):
-        inspector_choice: wx.Choice = self.GetWindow()
-
-        inspector_list = []
-        inspector_choice.Clear()
-
-        inspector_index = 0
-        inspector_choice.Append('-- none --')
-        inspector_list.append(None)
-
-        for i, inspector in enumerate(self.inspectors):
-            inspector_choice.Append(inspector.name)
-            inspector_list.append(inspector)
-            if self.current_inspector is not None:
-                if inspector.inspector_id == self.current_inspector.id:
-                    inspector_index = i + 1
-        inspector_choice.SetSelection(inspector_index)
-
-        return True
-
-    def TransferFromWindow(self):
-        choice: wx.Choice = self.GetWindow()
-        selection_index = choice.GetSelection()
-        print('selection', selection_index, self.inspectors)
-        if selection_index == 0:
-            inspector_id = None
-        else:
-            inspector = self.inspectors[selection_index-1]
-            print('inspector choice', inspector)
-            inspector_id = inspector.id
-        setattr(self.data, self.key, inspector_id)
-        return True
-
-
 class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
     def __init__(self, parent, inspection, db):
         # initialize parent class
@@ -378,6 +326,10 @@ class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
         self.robot_weight_with_red.SetValidator(WeightValidator(data=self.inspection, key='robot_weight_with_red', must_have_value=False))
         self.robot_weight_with_blue.SetValidator(WeightValidator(data=self.inspection, key='robot_weight_with_blue', must_have_value=False))
         self.inspector.SetValidator(InspectorValidator(data=self.inspection, key='inspector_id', inspectors=self.database.inspectors))
+        self.passed.SetValidator(PassedInspectionValidator(data=self.inspection, key='passed'))
+        self.comments.SetValidator(CommentsValidator(data=self.inspection, key='comments'))
+
+        print(f"inspection reason {inspection.inspection_reason}")
 
         if inspection.inspection_reason == InspectionReason.Weighin:
             self.robot_weight.GetValidator().must_have_value = True
@@ -394,6 +346,8 @@ class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
             pass
         elif inspection.inspection_reason == InspectionReason.Final:
             pass
+        else:
+            raise Exception("need to have a reason to inspect!")
 
     def enable_robot_weight(self, enabled):
         self.robot_weight_label.Enable(enabled)
@@ -416,12 +370,14 @@ class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
         self.robot_weight_with_blue.Enable(enabled)
 
     def enable_inspector(self, enabled):
+        print(f"setting inspector enabled = {enabled}")
         self.inspector_label.Enable(enabled)
         self.inspector.Enable(enabled)
+        print(f"inspector enabled = {self.inspector.IsEnabled()}")
 
     def enable_passed(self, enabled):
-        self.passed_label.Enable(False)
-        self.passed.Enable(False)
+        self.passed_label.Enable(enabled)
+        self.passed.Enable(enabled)
 
     def on_OK_button(self, event):
         print("Event handler 'on_button_OK' called")
@@ -485,6 +441,142 @@ class WeightValidator(wx.Validator):
 
     def TransferFromWindow(self):
         setattr(self.data, self.key, self.value)
+        return True
+
+
+class InspectorValidator(wx.Validator):
+    def __init__(self, data=None, key=None, inspectors=None, current_inspector=None):
+        super().__init__()
+        if data is None:
+            raise Exception("must specify data=")
+        if key is None:
+            raise Exception("must specify key=")
+        if inspectors is None:
+            raise Exception("must specify inspectors=")
+        self.data = data
+        self.key = key
+        self.inspectors = inspectors
+        self.current_inspector = current_inspector
+
+    def Clone(self):
+        return InspectorValidator(data=self.data, key=self.key, inspectors=self.inspectors, current_inspector=self.current_inspector)
+
+    def Validate(self, win):
+        return True
+
+    def TransferToWindow(self):
+        inspector_choice: wx.Choice = self.GetWindow()
+
+        inspector_list = []
+        inspector_choice.Clear()
+
+        inspector_index = 0
+        inspector_choice.Append('-- none --')
+        inspector_list.append(None)
+
+        for i, inspector in enumerate(self.inspectors):
+            inspector_choice.Append(inspector.name)
+            inspector_list.append(inspector)
+            if self.current_inspector is not None:
+                if inspector.inspector_id == self.current_inspector.id:
+                    inspector_index = i + 1
+        inspector_choice.SetSelection(inspector_index)
+
+        return True
+
+    def TransferFromWindow(self):
+        choice: wx.Choice = self.GetWindow()
+        selection_index = choice.GetSelection()
+        print('selection', selection_index, self.inspectors)
+        if selection_index == 0:
+            inspector_id = None
+        else:
+            inspector = self.inspectors[selection_index-1]
+            print('inspector choice', inspector)
+            inspector_id = inspector.id
+        setattr(self.data, self.key, inspector_id)
+        return True
+
+
+class PassedInspectionValidator(wx.Validator):
+    def __init__(self, data=None, key=None):
+        super().__init__()
+        if data is None:
+            raise Exception("must specify data=")
+        if key is None:
+            raise Exception("must specify key=")
+        self.data = data
+        self.key = key
+
+    def Clone(self):
+        return PassedInspectionValidator(data=self.data, key=self.key)
+
+    def Validate(self, win):
+        return True
+
+    def TransferToWindow(self):
+        passed_choice: wx.Choice = self.GetWindow()
+
+        passed_choice.Clear()
+
+        passed_choice.Append('-- no change --')
+        passed_choice.Append('Passed')
+        passed_choice.Append('Not passed')
+
+        passed_index = 0
+        v = getattr(self.data, self.key)
+        if v is not None:
+            passed_index = 1 if v else 0
+
+        passed_choice.SetSelection(passed_index)
+
+        return True
+
+    def TransferFromWindow(self):
+        choice: wx.Choice = self.GetWindow()
+        selection_index = choice.GetSelection()
+        if selection_index == 0:
+            passed = None
+        else:
+            passed = selection_index == 1
+        setattr(self.data, self.key, passed)
+        return True
+
+
+class CommentsValidator(wx.Validator):
+    def __init__(self, data=None, key=None):
+        super().__init__()
+        if data is None:
+            raise Exception("must specify data=")
+        if key is None:
+            raise Exception("must specify key=")
+        self.data = data
+        self.key = key
+
+    def Clone(self):
+        return CommentsValidator(data=self.data, key=self.key)
+
+    def Validate(self, win):
+        return True
+
+    def TransferToWindow(self):
+        textctrl: wx.TextCtrl = self.GetWindow()
+
+        v = getattr(self.data, self.key)
+        if v is None:
+            v = ''
+        textctrl.SetValue(v)
+
+        return True
+
+    def TransferFromWindow(self):
+        textctrl: wx.TextCtrl = self.GetWindow()
+
+        v = textctrl.GetValue()
+        v = v.rstrip()
+        if len(v) == 0:
+            v = None
+        setattr(self.data, self.key, v)
         return True
 
 

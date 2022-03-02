@@ -24,7 +24,7 @@ class Inspection:
         self.robot_weight_with_blue = None
         self.inspection_reason: InspectionReason = None
         self.comments = None
-        self.success = False
+        self.passed = None
 
 
 class TeamStatus(Enum):
@@ -60,16 +60,16 @@ class Team:
         for inspection in self.inspections:
             if inspection.robot_weight is not None:
                 possible_status.add(TeamStatus.Weighed)
-            if inspection.success:
+            if inspection.passed:
                 possible_status.add(TeamStatus.Inspected)
             if inspection.inspection_reason == InspectionReason.Final:
-                if inspection.success:
+                if inspection.passed:
                     possible_status.add(TeamStatus.Final_Completed)
                 else:
                     possible_status.add(TeamStatus.Final_Incomplete)
-        print('1: ', possible_status)
+        # print('1: ', possible_status)
         most_positive_status = sorted(possible_status, reverse=True, key=lambda r: r.value)[0]
-        print('2: ', most_positive_status)
+        # print('2: ', most_positive_status)
         return most_positive_status
 
 
