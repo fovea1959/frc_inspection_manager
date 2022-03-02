@@ -185,9 +185,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         elif event_id == frc_inspection_manager_wx.ID_I_OFF:
             new_status = InspectorStatus.Off
         elif event_id == frc_inspection_manager_wx.ID_I_PIT_RETURN:
-
-            # TODO need to record inspection result!
-            new_status = InspectorStatus.Available
+            # this will update the inspector status
+            self.inspection_end_dialog_box()
         else:
             self.SetStatusText("Got funny command!")
 
@@ -231,6 +230,34 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                     self.database.mark_dirty()
 
         return inspection_started
+
+    def inspection_end_dialog_box(self):
+        inspector = self.inspector_for_context_menu
+        inspection = Inspection()
+        inspection.inspection_reason = InspectionReason.Initial
+        inspection.when = datetime.datetime.now()
+        inspection.inspector_id = inspector.id
+        with InspectionDialog(self, inspection, self.database) as dlg:
+            # show as modal dialog
+            result = dlg.ShowModal()
+            print(f"weighin dialog box {result}")
+            if result == wx.ID_OK:
+                # user has hit OK -> read text control value
+                print('OK!', vars(inspection))
+
+                team_id = inspector.inspection_team_number
+                team = self.database.fetch_team(team_id)
+                team.inspections.append(inspection)
+                team.inspector_in_pit = None
+                inspector.status = InspectorStatus.Available
+                inspector.inspection_team_number = None
+
+                self.database.mark_dirty()
+
+                self.update_team(team)
+                self.status_frame.update_team(team)
+                self.update_inspector(inspector)
+
 
     def weighin_dialog_box(self):
         team = self.team_for_context_menu
@@ -354,12 +381,12 @@ class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
         self.robot_weight.Enable(enabled)
 
     def enable_red_bumper_weight(self, enabled):
-        self.red_bumper_label.Enable(enabled)
-        self.red_bumper.Enable(enabled)
+        self.red_bumper_weight_label.Enable(enabled)
+        self.red_bumper_weight.Enable(enabled)
 
     def enable_blue_bumper_weight(self, enabled):
-        self.blue_bumper_label.Enable(enabled)
-        self.blue_bumper.Enable(enabled)
+        self.blue_bumper_weight_label.Enable(enabled)
+        self.blue_bumper_weight.Enable(enabled)
 
     def enable_robot_weight_with_red(self, enabled):
         self.robot_weight_with_red_label.Enable(enabled)
@@ -445,7 +472,7 @@ class WeightValidator(wx.Validator):
 
 
 class InspectorValidator(wx.Validator):
-    def __init__(self, data=None, key=None, inspectors=None, current_inspector=None):
+    def __init__(self, data=None, key=None, inspectors=None):
         super().__init__()
         if data is None:
             raise Exception("must specify data=")
@@ -456,16 +483,17 @@ class InspectorValidator(wx.Validator):
         self.data = data
         self.key = key
         self.inspectors = inspectors
-        self.current_inspector = current_inspector
 
     def Clone(self):
-        return InspectorValidator(data=self.data, key=self.key, inspectors=self.inspectors, current_inspector=self.current_inspector)
+        return InspectorValidator(data=self.data, key=self.key, inspectors=self.inspectors)
 
     def Validate(self, win):
         return True
 
     def TransferToWindow(self):
         inspector_choice: wx.Choice = self.GetWindow()
+
+        current_inspector_id = getattr(self.data, self.key)
 
         inspector_list = []
         inspector_choice.Clear()
@@ -477,10 +505,11 @@ class InspectorValidator(wx.Validator):
         for i, inspector in enumerate(self.inspectors):
             inspector_choice.Append(inspector.name)
             inspector_list.append(inspector)
-            if self.current_inspector is not None:
-                if inspector.inspector_id == self.current_inspector.id:
+            if current_inspector_id is not None:
+                if inspector.id == current_inspector_id:
                     inspector_index = i + 1
         inspector_choice.SetSelection(inspector_index)
+        print(current_inspector_id, inspector_list, inspector_index)
 
         return True
 
