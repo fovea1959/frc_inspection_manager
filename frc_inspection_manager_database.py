@@ -16,7 +16,7 @@ class InspectionReason(Enum):
 class Inspection:
     def __init__(self):
         self.when = None
-        self.inspector_id: uuid = None
+        self.inspector_id = None
         self.robot_weight = None
         self.red_bumper_weight = None
         self.blue_bumper_weight = None
@@ -43,7 +43,7 @@ class Team:
         self.name = None
         self.checked_in = False
         self.inspections = []
-        self.inspector_in_pit = None        # inspector.id
+        self.inspectors_in_pit = set()        # inspector.id
 
     def __str__(self):
         return "Team " + str(self.number)
@@ -82,9 +82,9 @@ class InspectorStatus(Enum):
 
 
 class Inspector:
-    def __init__(self):
-        self.id = uuid.uuid4()
-        self.name = None
+    def __init__(self, name=None):
+        self.id = str(uuid.uuid4())
+        self.name = name
         self.status = InspectorStatus.Off
         self.inspection_team_number = None  # team number
         self.time_away_started = None
@@ -195,9 +195,8 @@ def database_from_tba(fn):
 
 if __name__ == '__main__':
     d = database_from_tba('2022misjo_teams.json')
-    i1 = Inspector()
-    i1.name = "Doug Wegscheid"
-    d.inspectors.append(i1)
+    d.inspectors.append(Inspector("Doug Wegscheid"))
+    d.inspectors.append(Inspector("Tearesa Wegscheid"))
 
     print(d)
     j = d.as_json()

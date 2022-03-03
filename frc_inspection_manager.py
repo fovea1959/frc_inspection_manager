@@ -66,9 +66,12 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.team_grid.SetRowLabelValue(row, str(t.number))
         self.team_grid.SetCellValue(row, 0, t.name)
         s = t.status_s
-        if t.inspector_in_pit is not None:
-            inspector = self.database.fetch_inspector(t.inspector_in_pit)
-            s += "; " + inspector.name + " in pit"
+        if len(t.inspectors_in_pit) > 0:
+            inspector_names = []
+            for inspector_id in t.inspectors_in_pit:
+                inspector = self.database.fetch_inspector(inspector_id)
+                inspector_names.append(inspector.name)
+            s += "; " + ', '.join(inspector_names) + " in pit"
         self.team_grid.SetCellValue(row, 1, s)
         self.team_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
         self.team_grid.AutoSize()
@@ -221,7 +224,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                     inspector.status = InspectorStatus.In_Pit
                     inspector.inspection_team_number = team.number
                     inspector.time_away_started = datetime.datetime.now()
-                    team.inspector_in_pit = inspector.id
+                    team.inspectors_in_pit.add(inspector.id)
 
                     self.update_team(team)
                     self.status_frame.update_team(team)
@@ -246,9 +249,9 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 print('OK!', vars(inspection))
 
                 team_id = inspector.inspection_team_number
-                team = self.database.fetch_team(team_id)
+                team: Team = self.database.fetch_team(team_id)
                 team.inspections.append(inspection)
-                team.inspector_in_pit = None
+                team.inspectors_in_pit.remove(inspector.id)
                 inspector.status = InspectorStatus.Available
                 inspector.inspection_team_number = None
 
@@ -325,7 +328,7 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
         p = self.team_to_gui_map[t.number]
         p.team_number.SetLabel(str(t.number))
         s = t.status_s
-        if t.inspector_in_pit is not None:
+        if len(t.inspectors_in_pit) > 0:
             s += "; inspector in pit"
         p.team_status.SetLabel(s)
 
