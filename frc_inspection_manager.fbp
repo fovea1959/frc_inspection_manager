@@ -664,6 +664,34 @@
                                         <property name="unchecked_bitmap"></property>
                                         <event name="OnMenuSelection">on_t_context</event>
                                     </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_T_REINSPECT</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">&amp;Reinspect</property>
+                                        <property name="name">m_t_reinspect</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_t_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_T_FINAL_WEIGHIN</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">&amp;Final weighin</property>
+                                        <property name="name">m_t_final_weighin</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut">f</property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_t_context</event>
+                                    </object>
                                 </object>
                             </object>
                         </object>

@@ -83,18 +83,28 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.inspector_grid.SetRowLabelValue(row, inspector.name)
         self.inspector_grid.SetCellValue(row, 0, inspector.status_s)
         self.inspector_grid.SetCellAlignment(row, 0, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
-        s = str(inspector.time_away_started) if inspector.time_away_started is not None else ""
+        s, c = self.format_away(inspector)
         self.inspector_grid.SetCellValue(row, 1, s)
         self.update_inspector_out_timer(inspector)
         self.inspector_grid.AutoSize()
         self.inspector_panel.Layout()
 
+    def format_away(self, inspector):
+        if inspector.time_away_started is None:
+            return "", None
+        if inspector.status != InspectorStatus.In_Pit and inspector.status != InspectorStatus.Break:
+            return "", None
+        return inspector.time_away_started.strftime('%a %I:%M %p'), None
+
     def update_inspector_out_timer(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
         s = ""
-        if inspector.time_away_started is not None:
+        if inspector.time_away_started is not None and (inspector.status == InspectorStatus.In_Pit or inspector.status == InspectorStatus.Break):
             out_time = datetime.datetime.now() - inspector.time_away_started
-            s = str(out_time)
+            minutes = round(out_time.total_seconds() / 60)
+
+            # Formatted only for hours and minutes as requested
+            s = f"{minutes} minutes"
         self.inspector_grid.SetCellValue(row, 2, s)
 
     def on_timer(self, event):
@@ -117,7 +127,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.team_panelOnContextMenu(event)
 
     def on_t_context(self, event: wx._core.CommandEvent):
-        print(type(event), event.GetId(), self.team_for_context_menu)
+        print("got a team context event:" , type(event), event.GetId(), self.team_for_context_menu)
         event_id = event.GetId()
         team = self.team_for_context_menu
         if event_id == frc_inspection_manager_wx.ID_T_CHECKIN:
@@ -125,12 +135,26 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         elif event_id == frc_inspection_manager_wx.ID_T_WEIGHIN:
             weighed_in = self.weighin_dialog_box()
             return
+        elif event_id == frc_inspection_manager_wx.ID_T_REINSPECT:
+            print("reinspect!")
+            self.reinspect_dialog_box()
+            return
+        elif event_id == frc_inspection_manager_wx.ID_T_FINAL_WEIGHIN:
+            print("final!")
+            inspection = self.reinspect_dialog_box()
+            if inspection is not None:
+                ok = self.check_weight(team, inspection)
+                inspection.passed = ok
         else:
             self.SetStatusText("Got funny command!")
+            print("got funny command")
 
         self.database.mark_dirty()
         self.update_team(team)
         self.status_frame.update_team(team)
+
+    def check_weight(self, team, inspection):
+        return True
 
     def on_inspector_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
@@ -183,6 +207,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             new_status = InspectorStatus.Field
         elif event_id == frc_inspection_manager_wx.ID_I_BREAK:
             new_status = InspectorStatus.Break
+            inspector.time_away_started = datetime.datetime.now()
         elif event_id == frc_inspection_manager_wx.ID_I_AVAILABLE:
             new_status = InspectorStatus.Available
         elif event_id == frc_inspection_manager_wx.ID_I_OFF:
@@ -261,14 +286,12 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 self.status_frame.update_team(team)
                 self.update_inspector(inspector)
 
-
     def weighin_dialog_box(self):
         team = self.team_for_context_menu
         weighin = Inspection()
         weighin.inspection_reason = InspectionReason.Weighin
         weighin.when = datetime.datetime.now()
         with InspectionDialog(self, weighin, self.database) as dlg:
-            #dlg.text_ctrl_1.SetValue(self.text_ctrl_1.GetValue())
             # show as modal dialog
             result = dlg.ShowModal()
             print(f"weighin dialog box {result}")
@@ -282,6 +305,28 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
                 self.update_team(team)
                 self.status_frame.update_team(team)
+
+    def reinspect_dialog_box(self):
+        print("making reinspect dialog")
+        team = self.team_for_context_menu
+        inspection = Inspection()
+        inspection.inspection_reason = InspectionReason.Reinspect
+        inspection.when = datetime.datetime.now()
+        with InspectionDialog(self, inspection, self.database) as dlg:
+            # show as modal dialog
+            result = dlg.ShowModal()
+            print(f"reinspect dialog box {result}")
+            if result == wx.ID_OK:
+                # user has hit OK -> read text control value
+                print('OK!', vars(inspection))
+
+                team.inspections.append(inspection)
+
+                self.database.mark_dirty()
+
+                self.update_team(team)
+                self.status_frame.update_team(team)
+        return inspection
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())

@@ -19,6 +19,8 @@ ID_I_OFF = 1004
 ID_I_PIT_RETURN = 1005
 ID_T_CHECKIN = 1006
 ID_T_WEIGHIN = 1007
+ID_T_REINSPECT = 1008
+ID_T_FINAL_WEIGHIN = 1009
 
 ###########################################################################
 ## Class MainFrame
@@ -158,6 +160,12 @@ class MainFrame ( wx.Frame ):
 		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weigh In", wx.EmptyString, wx.ITEM_NORMAL )
 		self.team_popup_menu.Append( self.m_t_weighin )
 
+		self.m_t_reinspect = wx.MenuItem( self.team_popup_menu, ID_T_REINSPECT, u"&Reinspect", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_reinspect )
+
+		self.m_t_final_weighin = wx.MenuItem( self.team_popup_menu, ID_T_FINAL_WEIGHIN, u"&Final weighin"+ u"\t" + u"f", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_final_weighin )
+
 		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
 
 		self.m_notebook1.AddPage( self.team_panel, u"Teams", False )
@@ -188,6 +196,8 @@ class MainFrame ( wx.Frame ):
 		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_checkin.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_reinspect.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_final_weighin.GetId() )
 		self.Bind( wx.EVT_TIMER, self.on_timer, id=wx.ID_ANY )
 
 	def __del__( self ):
@@ -216,6 +226,8 @@ class MainFrame ( wx.Frame ):
 
 	def on_t_context( self, event ):
 		pass
+
+
 
 
 	def on_timer( self, event ):
