@@ -26,6 +26,10 @@ class Inspection:
         self.comments = None
         self.passed = None
 
+    @property
+    def inspection_reason_s(self):
+        return str(self.inspection_reason).rpartition('.')[2].replace('_', ' ')
+
 
 class TeamStatus(Enum):
     Absent = auto()
