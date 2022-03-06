@@ -9,6 +9,33 @@ import frc_inspection_manager_wx
 from frc_inspection_manager_database import *
 
 
+def colors_for_team_status(ts: TeamStatus):
+    if ts == TeamStatus.Absent:
+        return 0, 0, 0
+    elif ts == TeamStatus.Weighed:
+        return 255, 255, 0
+    elif ts == TeamStatus.Inspected:
+        return 0, 200, 0
+    elif ts == TeamStatus.Final_Incomplete:
+        return 200, 200, 0
+    elif ts == TeamStatus.Final_Completed:
+        return 0, 255, 0
+    else:
+        return 40, 40, 40
+
+
+def b_if_n(v):
+    """
+    return a blank if value is None, else the string value of the parameter
+    :param v:
+    :return:
+    """
+    if v is None:
+        return ''
+    else:
+        return str(v)
+
+
 class MainFrame(frc_inspection_manager_wx.MainFrame):
     # constructor
     def __init__(self, parent, database: Database, status_frame=None):
@@ -26,10 +53,15 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
         self.team_to_row_map = {}
         self.row_to_team_map = {}
+
+        self.inspection_grid.Hide()
+
         for i, t in enumerate(self.database.teams):
             self.team_to_row_map[t.number] = i
             self.row_to_team_map[i] = t
             self.update_team(t)
+
+            self.inspection_history_team_choice.Append(str(t.number))
 
         self.team_grid.SetColLabelValue(0, 'Name')
         self.team_grid.SetColLabelValue(1, 'Status')
@@ -72,8 +104,10 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 inspector = self.database.fetch_inspector(inspector_id)
                 inspector_names.append(inspector.name)
             s += "; " + ', '.join(inspector_names) + " in pit"
+        fg_color = colors_for_team_status(t.status)
         self.team_grid.SetCellValue(row, 1, s)
         self.team_grid.SetCellAlignment(row, 1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
+        self.team_grid.SetCellTextColour(row, 1, fg_color)
         self.team_grid.AutoSize()
         self.team_panel.Layout()
 
@@ -345,6 +379,33 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 return
         event.Skip()
 
+    def on_inspection_history_team_pick(self, event):
+        selection = self.inspection_history_team_choice.GetSelection()
+        team_id = int(self.inspection_history_team_choice.GetString(selection))
+        print(f"pulling up history for {team_id}")
+        self.update_inspection_history(team_id)
+        event.Skip()
+
+    def update_inspection_history(self, team_id):
+        if self.inspection_grid.GetNumberRows() > 0:
+            self.inspection_grid.DeleteRows(0, self.inspection_grid.GetNumberRows())
+        team = self.database.fetch_team(team_id)
+        inspection_count = len(team.inspections)
+        if inspection_count == 0:
+            self.inspection_grid.Hide()
+        else:
+            self.inspection_grid.Show()
+            self.inspection_grid.AppendRows(len(team.inspections))
+            for i, inspection in enumerate(team.inspections):
+                self.inspection_grid.SetRowLabelValue(i, inspection.when.strftime('%a %I:%M %p'))
+                self.inspection_grid.SetCellValue(i, 0, inspection.inspection_reason_s)
+                self.inspection_grid.SetCellValue(i, 1, b_if_n(inspection.robot_weight))
+                self.inspection_grid.SetCellValue(i, 2, b_if_n(inspection.red_bumper_weight))
+                self.inspection_grid.SetCellValue(i, 3, b_if_n(inspection.blue_bumper_weight))
+                self.inspection_grid.SetCellValue(i, 4, b_if_n(inspection.passed))
+            self.inspection_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
+            self.inspection_grid.AutoSize()
+            self.inspection_history.Layout()
 
 class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     # constructor
@@ -372,6 +433,8 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
     def update_team(self, t: Team):
         p = self.team_to_gui_map[t.number]
         p.team_number.SetLabel(str(t.number))
+        fg_color = colors_for_team_status(t.status)
+        p.team_number.SetForegroundColour(fg_color)
         s = t.status_s
         if len(t.inspectors_in_pit) > 0:
             s += "; inspector in pit"

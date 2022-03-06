@@ -169,6 +169,56 @@ class MainFrame ( wx.Frame ):
 		self.team_panel.Bind( wx.EVT_RIGHT_DOWN, self.team_panelOnContextMenu )
 
 		self.m_notebook1.AddPage( self.team_panel, u"Teams", False )
+		self.inspection_history = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		bSizer6 = wx.BoxSizer( wx.VERTICAL )
+
+		bSizer7 = wx.BoxSizer( wx.HORIZONTAL )
+
+		self.m_staticText11 = wx.StaticText( self.inspection_history, wx.ID_ANY, u"Team:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText11.Wrap( -1 )
+
+		bSizer7.Add( self.m_staticText11, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+
+		inspection_history_team_choiceChoices = []
+		self.inspection_history_team_choice = wx.Choice( self.inspection_history, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, inspection_history_team_choiceChoices, 0 )
+		self.inspection_history_team_choice.SetSelection( 0 )
+		bSizer7.Add( self.inspection_history_team_choice, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.LEFT, 5 )
+
+
+		bSizer6.Add( bSizer7, 0, wx.ALIGN_CENTER, 5 )
+
+		self.m_staticline2 = wx.StaticLine( self.inspection_history, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LI_HORIZONTAL )
+		bSizer6.Add( self.m_staticline2, 0, wx.EXPAND |wx.ALL, 5 )
+
+		self.inspection_grid = wx.grid.Grid( self.inspection_history, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
+
+		# Grid
+		self.inspection_grid.CreateGrid( 1, 5 )
+		self.inspection_grid.EnableEditing( False )
+		self.inspection_grid.EnableGridLines( True )
+		self.inspection_grid.EnableDragGridSize( False )
+		self.inspection_grid.SetMargins( 0, 0 )
+
+		# Columns
+		self.inspection_grid.EnableDragColMove( False )
+		self.inspection_grid.EnableDragColSize( True )
+		self.inspection_grid.SetColLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
+
+		# Rows
+		self.inspection_grid.EnableDragRowSize( True )
+		self.inspection_grid.SetRowLabelAlignment( wx.ALIGN_CENTER, wx.ALIGN_CENTER )
+
+		# Label Appearance
+
+		# Cell Defaults
+		self.inspection_grid.SetDefaultCellAlignment( wx.ALIGN_LEFT, wx.ALIGN_TOP )
+		bSizer6.Add( self.inspection_grid, 1, wx.ALL|wx.EXPAND, 5 )
+
+
+		self.inspection_history.SetSizer( bSizer6 )
+		self.inspection_history.Layout()
+		bSizer6.Fit( self.inspection_history )
+		self.m_notebook1.AddPage( self.inspection_history, u"Inspection History", False )
 
 		bSizer11.Add( self.m_notebook1, 1, wx.EXPAND |wx.ALL, 5 )
 
@@ -198,6 +248,7 @@ class MainFrame ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_reinspect.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_final_weighin.GetId() )
+		self.inspection_history_team_choice.Bind( wx.EVT_CHOICE, self.on_inspection_history_team_pick )
 		self.Bind( wx.EVT_TIMER, self.on_timer, id=wx.ID_ANY )
 
 	def __del__( self ):
@@ -229,6 +280,9 @@ class MainFrame ( wx.Frame ):
 
 
 
+
+	def on_inspection_history_team_pick( self, event ):
+		pass
 
 	def on_timer( self, event ):
 		pass
