@@ -67,8 +67,9 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
             self.inspection_history_team_choice.Append(str(t.number))
 
-        self.team_grid.SetColLabelValue(0, 'Name')
-        self.team_grid.SetColLabelValue(1, 'Status')
+        labels = ['Name', 'Status']
+        for i, label in enumerate(labels):
+            self.team_grid.SetColLabelValue(i, label)
         # self.inspector_grid.SetColLabelAlignment(1, wx.ALIGN_CENTER, wx.ALIGN_CENTER)
 
         self.team_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
@@ -86,14 +87,19 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             self.row_to_inspector_map[i] = inspector
             self.update_inspector(inspector)
 
-        self.inspector_grid.SetColLabelValue(0, 'status')
-        self.inspector_grid.SetColLabelValue(1, 'when left')
+        labels = [
+            'status',
+            'when left',
+            '(gone)'
+        ]
+        for i, label in enumerate(labels):
+            self.inspector_grid.SetColLabelValue(i, label)
         # self.inspector_grid.SetColLabelAlignment(wx.ALIGN_CENTER, wx.ALIGN_CENTER)
         self.inspector_grid.SetRowLabelSize(wx.grid.GRID_AUTOSIZE)
         self.inspector_grid.AutoSize()
         self.inspector_panel.Layout()
 
-        inspector_labels = [
+        labels = [
             'Inspection Type',
             'Passed',
             'Inspector',
@@ -104,8 +110,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
             'Robot w/ Blue',
             'Comments'
         ]
-
-        for i, label in enumerate(inspector_labels):
+        for i, label in enumerate(labels):
             self.inspection_grid.SetColLabelValue(i, label)
 
     def set_status_frame(self, status_frame):
@@ -152,13 +157,22 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
     def update_inspector_out_timer(self, inspector: Inspector):
         row = self.inspector_to_row_map[inspector.id]
         s = ""
+        color = (0, 0, 0)
         if inspector.time_away_started is not None and (inspector.status == InspectorStatus.In_Pit or inspector.status == InspectorStatus.Break):
             out_time = datetime.datetime.now() - inspector.time_away_started
             minutes = round(out_time.total_seconds() / 60)
 
+            if inspector.status == InspectorStatus.Break:
+                if minutes > 40:
+                    color = (255, 0, 0)
+            elif inspector.status == InspectorStatus.In_Pit:
+                if minutes > 30:
+                    color = (255, 0, 0)
+
             # Formatted only for hours and minutes as requested
             s = f"{minutes} minutes"
         self.inspector_grid.SetCellValue(row, 2, s)
+        self.inspector_grid.SetCellTextColour(row, 2, color)
 
     def on_timer(self, event):
         for inspector in self.row_to_inspector_map.values():
@@ -186,18 +200,16 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         if event_id == frc_inspection_manager_wx.ID_T_CHECKIN:
             team.checked_in = not team.checked_in
         elif event_id == frc_inspection_manager_wx.ID_T_WEIGHIN:
-            weighed_in = self.weighin_dialog_box()
+            weighed_in = self.inspection_dialog_box(InspectionReason.Weighin)
             return
         elif event_id == frc_inspection_manager_wx.ID_T_REINSPECT:
             print("reinspect!")
-            self.reinspect_dialog_box()
+            self.inspection_dialog_box(InspectionReason.Reinspect)
             return
         elif event_id == frc_inspection_manager_wx.ID_T_FINAL_WEIGHIN:
             print("final!")
-            inspection = self.reinspect_dialog_box()
-            if inspection is not None:
-                ok = self.check_weight(team, inspection)
-                inspection.passed = ok
+            inspection = self.inspection_dialog_box(InspectionReason.Final)
+            return
         else:
             self.SetStatusText("Got funny command!")
             print("got funny command")
@@ -205,9 +217,6 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.database.mark_dirty()
         self.update_team(team)
         self.status_frame.update_team(team)
-
-    def check_weight(self, team, inspection):
-        return True
 
     def on_inspector_right_click(self, event):
         print(event.GetEventType(), event.GetEventObject(), event.GetCol(), event.GetRow())
@@ -281,7 +290,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         choices = None
         if team is None:
             choices = [str(t.number) for t in self.database.teams]
-            prompt = "Which team is " + inspector.name + " + inspecting?"
+            prompt = f"Which team is {inspector.name} inspecting?"
         elif inspector is None:
             choices = [i.name for i in self.database.inspectors]
             prompt = "Which inspector is going to team " + str(team.number) + ", " + team.name
@@ -318,7 +327,8 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         inspection.inspection_reason = InspectionReason.Initial
         inspection.when = datetime.datetime.now()
         inspection.inspector_id = inspector.id
-        with InspectionDialog(self, inspection, self.database) as dlg:
+        team = self.database.fetch_team(inspector.inspection_team_number)
+        with InspectionDialog(self, inspection, team, self.database) as dlg:
             # show as modal dialog
             result = dlg.ShowModal()
             print(f"weighin dialog box {result}")
@@ -339,39 +349,21 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
                 self.status_frame.update_team(team)
                 self.update_inspector(inspector)
 
-    def weighin_dialog_box(self):
+    def inspection_dialog_box(self, reason):
         team = self.team_for_context_menu
-        weighin = Inspection()
-        weighin.inspection_reason = InspectionReason.Weighin
-        weighin.when = datetime.datetime.now()
-        with InspectionDialog(self, weighin, self.database) as dlg:
+        inspection = Inspection()
+        inspection.inspection_reason = reason
+        inspection.when = datetime.datetime.now()
+        with InspectionDialog(self, inspection, team, self.database) as dlg:
             # show as modal dialog
             result = dlg.ShowModal()
             print(f"weighin dialog box {result}")
             if result == wx.ID_OK:
                 # user has hit OK -> read text control value
-                print('OK!', vars(weighin))
-
-                team.inspections.append(weighin)
-
-                self.database.mark_dirty()
-
-                self.update_team(team)
-                self.status_frame.update_team(team)
-
-    def reinspect_dialog_box(self):
-        print("making reinspect dialog")
-        team = self.team_for_context_menu
-        inspection = Inspection()
-        inspection.inspection_reason = InspectionReason.Reinspect
-        inspection.when = datetime.datetime.now()
-        with InspectionDialog(self, inspection, self.database) as dlg:
-            # show as modal dialog
-            result = dlg.ShowModal()
-            print(f"reinspect dialog box {result}")
-            if result == wx.ID_OK:
-                # user has hit OK -> read text control value
                 print('OK!', vars(inspection))
+
+                if dlg.inspection_passed_override is not None:
+                    inspection.passed = dlg.inspection_passed_override
 
                 team.inspections.append(inspection)
 
@@ -379,7 +371,6 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
                 self.update_team(team)
                 self.status_frame.update_team(team)
-        return inspection
 
     def my_on_close(self, event):
         print(event.GetEventType(), event.GetEventObject())
@@ -487,12 +478,15 @@ class TeamStatusFrame(frc_inspection_manager_wx.TeamStatusFrame):
 
 
 class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
-    def __init__(self, parent, inspection, db):
+    def __init__(self, parent, inspection, team, database):
         # initialize parent class
         super().__init__(parent)
 
         self.inspection = inspection
-        self.database = db
+        self.team = team
+        self.database = database
+
+        self.inspection_passed_override = None
 
         self.robot_weight.SetValidator(WeightValidator(data=self.inspection, key='robot_weight', must_have_value=False))
         self.red_bumper_weight.SetValidator(WeightValidator(data=self.inspection, key='red_bumper_weight', must_have_value=False))
@@ -553,14 +547,53 @@ class InspectionDialog(frc_inspection_manager_wx.InspectionDialog):
         self.passed_label.Enable(enabled)
         self.passed.Enable(enabled)
 
+    def final_robot_weight(self):
+        print (f"calculating final robot weight for {self.team} {vars(self.inspection)}")
+        i: Inspection = self.inspection
+        rv = None
+        if i.robot_weight is not None:
+            return i.robot_weight
+        elif i.robot_weight_with_red is not None:
+            bumper = self.team.last_red_bumper_weight
+            if i.red_bumper_weight is not None:
+                bumper = i.red_bumper_weight
+            return i.robot_weight_with_red - bumper
+        elif i.robot_weight_with_blue is not None:
+            bumper = self.team.last_blue_bumper_weight
+            if i.blue_bumper_weight is not None:
+                bumper = i.blue_bumper_weight
+            return i.robot_weight_with_blue - bumper
+        else:
+            return None
+
     def on_OK_button(self, event):
         print("Event handler 'on_button_OK' called")
-        # don't call Skip if you want to keep the dialog open
-        if False:  # maybe also check self.validate_contents()
-            print("Checkbox not checked -> don't close the dialog")
-            wx.Bell()
-        else:
-            print("Checkbox checked -> close the dialog")
+        if self.Validate() and self.TransferDataFromWindow():
+            if self.inspection.inspection_reason == InspectionReason.Final:
+                weight = self.final_robot_weight()
+                print(f'final weight is {weight}')
+                if weight is None:
+                    wx.MessageBox("Need a robot weight!", f"Team {self.team.number}", wx.OK | wx.ICON_ERROR)
+                    wx.Bell()
+                    return
+                expected_weight = self.team.expected_weight
+                if expected_weight is None:
+                    wx.MessageBox("No previous weighins!", f"Team {self.team.number}", wx.OK | wx.ICON_ERROR)
+                    wx.Bell()
+                    return
+                if abs(expected_weight - weight) > 1.0:
+                    print('weight is wrong')
+                    l = expected_weight - 1.0
+                    h = expected_weight + 1.0
+                    wx.MessageBox(f"got a problem: weight is {weight}, expected {l} - {h}", f"Team {self.team.number}", wx.OK | wx.ICON_ERROR)
+                    self.inspection_passed_override = False
+                else:
+                    print('weight is ok')
+                    self.inspection_passed_override = True
+            else:
+                pass
+
+            # don't call Skip if you want to keep the dialog open
             event.Skip()
 
 
@@ -614,6 +647,7 @@ class WeightValidator(wx.Validator):
         return True
 
     def TransferFromWindow(self):
+        print(f'weight validator got {self.key} = {self.value}')
         setattr(self.data, self.key, self.value)
         return True
 
@@ -758,7 +792,7 @@ class CommentsValidator(wx.Validator):
 
 if __name__ == '__main__':
     database = Database()
-    fn = 'misjo.imd'
+    fn = 'milak.imd'
     with open(fn, 'r') as fp:
         j = fp.read()
         database.from_json(j)

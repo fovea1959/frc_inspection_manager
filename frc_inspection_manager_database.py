@@ -61,20 +61,67 @@ class Team:
         possible_status = {TeamStatus.Absent}
         if self.checked_in:
             possible_status.add(TeamStatus.Checked_In)
+        last_final_passed = None
         for inspection in self.inspections:
             if inspection.robot_weight is not None:
                 possible_status.add(TeamStatus.Weighed)
             if inspection.passed:
                 possible_status.add(TeamStatus.Inspected)
             if inspection.inspection_reason == InspectionReason.Final:
-                if inspection.passed:
-                    possible_status.add(TeamStatus.Final_Completed)
-                else:
-                    possible_status.add(TeamStatus.Final_Incomplete)
+                if inspection.passed is not None:
+                    last_final_passed = inspection.passed
+        if last_final_passed is not None:
+            if last_final_passed:
+                possible_status.add(TeamStatus.Final_Completed)
+            else:
+                possible_status.add(TeamStatus.Final_Incomplete)
+
         # print('1: ', possible_status)
         most_positive_status = sorted(possible_status, reverse=True, key=lambda r: r.value)[0]
         # print('2: ', most_positive_status)
         return most_positive_status
+
+    @property
+    def last_red_bumper_weight(self):
+        rv = None
+        for inspection in self.inspections:
+            if inspection.red_bumper_weight is not None:
+                rv = inspection.red_bumper_weight
+        return rv
+
+    @property
+    def last_blue_bumper_weight(self):
+        rv = None
+        for inspection in self.inspections:
+            if inspection.blue_bumper_weight is not None:
+                rv = inspection.blue_bumper_weight
+        return rv
+
+    @property
+    def expected_weight(self):
+        rv = None
+        last_rb_weight = 0
+        last_bb_weight = 0
+        for inspection in self.inspections:
+            if inspection.inspection_reason == InspectionReason.Final:
+                continue
+            this_weight = None
+            if inspection.red_bumper_weight is not None:
+                last_rb_weight = inspection.red_bumper_weight
+            if inspection.blue_bumper_weight is not None:
+                last_bb_weight = inspection.blue_bumper_weight
+
+            if inspection.robot_weight is not None:
+                this_weight = inspection.robot_weight
+            elif inspection.robot_weight_with_red is not None:
+                this_weight = inspection.robot_weight_with_red - last_rb_weight
+            elif inspection.robot_weight_with_blue is not None:
+                this_weight = inspection.robot_weight_with_blue - last_bb_weight
+
+            if this_weight is not None:
+                rv = this_weight
+
+        return rv
 
 
 class InspectorStatus(Enum):
@@ -192,22 +239,23 @@ def database_from_tba(fn):
         team = Team()
         team.number = tba1['team_number']
         team.name = tba1['nickname']
+        print(str(team.number) + "," + team.name)
         database.teams.append(team)
     database.make_indices()
     return database
 
 
 if __name__ == '__main__':
-    d = database_from_tba('2022misjo_teams.json')
+    d = database_from_tba('2022milak_teams.json')
     d.inspectors.append(Inspector("Doug Wegscheid"))
     d.inspectors.append(Inspector("Tearesa Wegscheid"))
 
     print(d)
     j = d.as_json()
-    with open('misjo.imd', 'w') as fp:
+    with open('milak.imd', 'w') as fp:
         fp.write(j)
 
-    with open('misjo.imd', 'r') as fp:
+    with open('milak.imd', 'r') as fp:
         j = fp.read()
         dd = Database()
         dd.from_json(j)

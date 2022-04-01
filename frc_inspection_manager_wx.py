@@ -341,8 +341,6 @@ class InspectionDialog ( wx.Dialog ):
 		self.topSizer.Add( self.red_bumper_weight_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
 
 		self.red_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.red_bumper_weight.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-
 		self.topSizer.Add( self.red_bumper_weight, 0, wx.ALL|wx.EXPAND, 5 )
 
 		self.blue_bumper_weight_label = wx.StaticText( self, wx.ID_ANY, u"<span foreground='red'>Blue</span> Bumper Weight", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_RIGHT )
@@ -354,8 +352,6 @@ class InspectionDialog ( wx.Dialog ):
 		self.topSizer.Add( self.blue_bumper_weight_label, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
 
 		self.blue_bumper_weight = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.blue_bumper_weight.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-
 		self.topSizer.Add( self.blue_bumper_weight, 1, wx.ALL|wx.EXPAND, 5 )
 
 		self.robot_weight_with_red_label = wx.StaticText( self, wx.ID_ANY, u"Robot + Red Bumper Weight", wx.DefaultPosition, wx.DefaultSize, 0 )
