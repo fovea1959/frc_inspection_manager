@@ -19,8 +19,9 @@ ID_I_OFF = 1004
 ID_I_PIT_RETURN = 1005
 ID_T_CHECKIN = 1006
 ID_T_WEIGHIN = 1007
-ID_T_REINSPECT = 1008
-ID_T_FINAL_WEIGHIN = 1009
+ID_T_PASS_INSPECTION = 1008
+ID_T_REINSPECT = 1009
+ID_T_FINAL_WEIGHIN = 1010
 
 ###########################################################################
 ## Class MainFrame
@@ -160,6 +161,9 @@ class MainFrame ( wx.Frame ):
 		self.m_t_weighin = wx.MenuItem( self.team_popup_menu, ID_T_WEIGHIN, u"&Weigh In", wx.EmptyString, wx.ITEM_NORMAL )
 		self.team_popup_menu.Append( self.m_t_weighin )
 
+		self.m_t_pass_inspection = wx.MenuItem( self.team_popup_menu, ID_T_PASS_INSPECTION, u"Pass Inspection", wx.EmptyString, wx.ITEM_NORMAL )
+		self.team_popup_menu.Append( self.m_t_pass_inspection )
+
 		self.m_t_reinspect = wx.MenuItem( self.team_popup_menu, ID_T_REINSPECT, u"&Reinspect", wx.EmptyString, wx.ITEM_NORMAL )
 		self.team_popup_menu.Append( self.m_t_reinspect )
 
@@ -258,6 +262,7 @@ class MainFrame ( wx.Frame ):
 		self.team_grid.Bind( wx.grid.EVT_GRID_LABEL_RIGHT_CLICK, self.on_team_right_click )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_checkin.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_weighin.GetId() )
+		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_pass_inspection.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_reinspect.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_t_context, id = self.m_t_final_weighin.GetId() )
 		self.inspection_history_team_choice.Bind( wx.EVT_CHOICE, self.on_inspection_history_team_pick )
@@ -289,6 +294,7 @@ class MainFrame ( wx.Frame ):
 
 	def on_t_context( self, event ):
 		pass
+
 
 
 

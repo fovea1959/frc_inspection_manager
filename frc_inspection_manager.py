@@ -187,6 +187,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
 
     def display_team_context_menu(self, event, team):
         self.m_t_team.SetItemLabel(str(team.number))
+        print(f'displaying context for team {team.number}')
         self.team_for_context_menu = team
 
         self.m_t_checkin.Check(team.checked_in)
@@ -194,7 +195,7 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         self.team_panelOnContextMenu(event)
 
     def on_t_context(self, event: wx._core.CommandEvent):
-        print("got a team context event:" , type(event), event.GetId(), self.team_for_context_menu)
+        print("got a team context event:", type(event), event.GetId(), self.team_for_context_menu)
         event_id = event.GetId()
         team = self.team_for_context_menu
         if event_id == frc_inspection_manager_wx.ID_T_CHECKIN:
@@ -202,6 +203,13 @@ class MainFrame(frc_inspection_manager_wx.MainFrame):
         elif event_id == frc_inspection_manager_wx.ID_T_WEIGHIN:
             weighed_in = self.inspection_dialog_box(InspectionReason.Weighin)
             return
+        elif event_id == frc_inspection_manager_wx.ID_T_PASS_INSPECTION:
+            print("pass inspection")
+            inspection = Inspection()
+            inspection.inspection_reason = InspectionReason.Initial
+            inspection.passed = True
+            inspection.when = datetime.datetime.now()
+            team.inspections.append(inspection)
         elif event_id == frc_inspection_manager_wx.ID_T_REINSPECT:
             print("reinspect!")
             self.inspection_dialog_box(InspectionReason.Reinspect)

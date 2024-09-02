@@ -615,7 +615,7 @@
                                         </object>
                                     </object>
                                 </object>
-                                <object class="wxMenu" expanded="0">
+                                <object class="wxMenu" expanded="1">
                                     <property name="label">MyMenu</property>
                                     <property name="name">team_popup_menu</property>
                                     <property name="permission">protected</property>
@@ -659,6 +659,20 @@
                                         <property name="kind">wxITEM_NORMAL</property>
                                         <property name="label">&amp;Weigh In</property>
                                         <property name="name">m_t_weighin</property>
+                                        <property name="permission">none</property>
+                                        <property name="shortcut"></property>
+                                        <property name="unchecked_bitmap"></property>
+                                        <event name="OnMenuSelection">on_t_context</event>
+                                    </object>
+                                    <object class="wxMenuItem" expanded="1">
+                                        <property name="bitmap"></property>
+                                        <property name="checked">0</property>
+                                        <property name="enabled">1</property>
+                                        <property name="help"></property>
+                                        <property name="id">ID_T_PASS_INSPECTION</property>
+                                        <property name="kind">wxITEM_NORMAL</property>
+                                        <property name="label">Pass Inspection</property>
+                                        <property name="name">m_t_pass_inspection</property>
                                         <property name="permission">none</property>
                                         <property name="shortcut"></property>
                                         <property name="unchecked_bitmap"></property>
@@ -2447,7 +2461,7 @@
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
             <property name="window_style">wxBORDER_DEFAULT</property>
-            <object class="wxGridBagSizer" expanded="0">
+            <object class="wxGridBagSizer" expanded="1">
                 <property name="empty_cell_size"></property>
                 <property name="flexible_direction">wxBOTH</property>
                 <property name="growablecols">0</property>
